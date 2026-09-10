@@ -1,7 +1,8 @@
 # API Reference
 
 Base URL is same-origin (the app calls these via relative `/api/*` paths).
-No authentication on any endpoint. All request/response bodies are JSON.
+Storefront endpoints are public; auth/account/address endpoints use the session
+cookie. All request/response bodies are JSON.
 
 ---
 
@@ -168,3 +169,28 @@ minPrice, maxPrice, q })`, `getProductBySlug(slug)`, `getProductReviews(productI
 `getRelatedProducts(product)`, `getCategoryById(id)`. Shop page URL params:
 `?category=<slug|all>`, `?sort=<featured|newest|price-asc|price-desc|rating>`,
 `?q=<text>`, `?price=<min-max>` (e.g. `3000-`).
+
+---
+
+## Auth & account
+
+Session cookie (`deshicart_session`) is HttpOnly; login/signup set it via
+`Set-Cookie`. Passwords are scrypt-hashed, never returned.
+
+- **`POST /api/auth/signup`** — `{ name, email, phone?, password (min 8) }` →
+  `201 { user: { id, name, email, phone } }`. `409` if the email is taken.
+- **`POST /api/auth/login`** — `{ email, password }` → `200 { user }`.
+  `401` on bad credentials.
+- **`POST /api/auth/logout`** — destroys the session, clears the cookie.
+- **`GET /api/auth/me`** — `{ user, defaultAddress }` or `{ user: null }`.
+  Used by the header and checkout prefill.
+- **`GET /api/addresses`** — list own addresses (401 when logged out).
+- **`POST /api/addresses`** — `{ label?, name, phone, address, city, postcode?, isDefault? }`.
+  First address (or `isDefault: true`) becomes default. → `201 { address }`.
+- **`PATCH /api/addresses/[id]`** — `{ isDefault: true }` to change default.
+  `404` for another user's id.
+- **`DELETE /api/addresses/[id]`** — removes it; promotes the oldest remaining
+  address if it was the default.
+
+Pages: `/login`, `/signup`, `/account` (order history + address book, redirects
+to `/login` when anonymous).

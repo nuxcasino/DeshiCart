@@ -18,6 +18,7 @@ export default function Header() {
   const { count, openCart } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [accountName, setAccountName] = useState<string | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -31,6 +32,14 @@ export default function Header() {
     // Intentional external-system sync: close the mobile menu on navigation.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    // Session lookup in a fetch callback (not a direct effect-body setState).
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => setAccountName(d?.user?.name ?? null))
+      .catch(() => setAccountName(null));
   }, [pathname]);
 
   return (
@@ -92,6 +101,22 @@ export default function Header() {
                   <circle cx="11" cy="11" r="7" />
                   <path d="m20 20-3.5-3.5" strokeLinecap="round" />
                 </svg>
+              </Link>
+              <Link
+                href={accountName ? "/account" : "/login"}
+                className="flex items-center gap-1.5 p-2 text-ink hover:text-clay transition-colors"
+                aria-label={accountName ? "My account" : "Log in"}
+              >
+                {accountName ? (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-clay font-display text-xs font-semibold text-white">
+                    {accountName.trim()[0]?.toUpperCase() ?? "•"}
+                  </span>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                    <circle cx="12" cy="8" r="4" />
+                    <path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" strokeLinecap="round" />
+                  </svg>
+                )}
               </Link>
               <button
                 onClick={openCart}

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { formatBDT } from "@/lib/format";
+import { getSessionUser } from "@/lib/auth";
 import ClearCartOnSuccess from "@/components/ClearCartOnSuccess";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,13 @@ export default async function OrderPage({
 
   const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
   if (!order) notFound();
+
+  // Orders placed while logged in are visible only to their owner.
+  // Guest orders (userId null) keep the legacy shareable link behavior.
+  if (order.userId !== null) {
+    const session = await getSessionUser();
+    if (!session || session.id !== order.userId) notFound();
+  }
 
   const items = await db
     .select()

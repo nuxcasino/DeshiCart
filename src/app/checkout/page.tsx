@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
 
@@ -65,6 +65,25 @@ function CheckoutForm() {
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Prefill from the account (if logged in) without clobbering typed input.
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d?.user) return;
+        setForm((f) => ({
+          ...f,
+          customerName: f.customerName || d.user.name || "",
+          email: f.email || d.user.email || "",
+          phone: f.phone || d.user.phone || "",
+          address: f.address || d.defaultAddress?.address || "",
+          city: f.address ? f.city : d.defaultAddress?.city || f.city,
+          postcode: f.postcode || d.defaultAddress?.postcode || "",
+        }));
+      })
+      .catch(() => {});
+  }, []);
 
   // Gateway return errors (?error=payment-failed|cancelled) — derived during
   // render so no effect-sync is needed. The bag is kept intact on return.

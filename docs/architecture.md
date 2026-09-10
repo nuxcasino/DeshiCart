@@ -101,12 +101,23 @@ drizzle.config.ts         drizzle-kit config (reads DATABASE_URL)
 
 ## Authentication flow
 
-There is none. All pages and APIs are public; checkout is guest checkout.
+Email + password accounts with scrypt hashing (`src/lib/auth.ts`, Node `crypto` —
+no extra dependency). Sessions are random 256-bit tokens stored SHA-256-hashed
+in the `sessions` table (30-day expiry), carried in an HttpOnly `SameSite=Lax`
+cookie (`deshicart_session`, `Secure` in production). No JWT secret to manage.
 
-- No login, sessions, cookies, or middleware.
-- The `/order/[id]` page is reachable by anyone who knows (or guesses) a sequential
-  order id — acceptable for a demo, but see the security notes in
-  [deployment.md](deployment.md) before handling real customer data.
+```text
+signup/login → scrypt verify → create session row → Set-Cookie
+each request → hash cookie token → look up session + user (expiry-checked)
+logout → delete session row + clear cookie
+```
+
+- Guest checkout still works: `orders.user_id` is nullable.
+- Orders placed while logged in are linked and visible only to their owner
+  (`/order/[id]` returns 404 otherwise); guest orders keep shareable links.
+- `/account` (server component) redirects to `/login` when unauthenticated;
+  checkout prefills contact/address from the account's default address.
+- No email verification, password reset, or OAuth yet — see roadmap.
 
 ## API flow
 

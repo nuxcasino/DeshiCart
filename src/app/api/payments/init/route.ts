@@ -5,6 +5,7 @@ import { inArray, eq } from "drizzle-orm";
 import { shippingFor } from "@/lib/format";
 import { findInsufficientStock, reserveStock } from "@/lib/stock";
 import { getSiteUrl, initSslcommerzPayment } from "@/lib/sslcommerz";
+import { getSessionUserFromRequest } from "@/lib/auth";
 
 type IncomingItem = {
   productId: number;
@@ -93,9 +94,11 @@ export async function POST(request: Request) {
     const tranId = `DC-${Date.now()}`;
     let orderId: number;
     try {
+      const sessionUser = await getSessionUserFromRequest(request);
       const [order] = await db
         .insert(orders)
         .values({
+          userId: sessionUser?.id ?? null,
           customerName,
           email,
           phone,

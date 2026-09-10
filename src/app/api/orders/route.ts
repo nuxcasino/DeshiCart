@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { shippingFor } from "@/lib/format";
+import { getSessionUserFromRequest } from "@/lib/auth";
 
 type IncomingItem = {
   productId: number;
@@ -83,6 +84,9 @@ export async function POST(request: Request) {
     const subtotal = lineItems.reduce((a, i) => a + i.price * i.quantity, 0);
     const shipping = shippingFor(subtotal);
 
+    // Link the order to the account when the customer is logged in.
+    const sessionUser = await getSessionUserFromRequest(request);
+
     // Reserve stock before creating the order. Each decrement is conditional
     // (stock >= quantity) so concurrent checkouts can't oversell. The Neon
     // HTTP driver has no interactive transactions, so on a lost race we
@@ -118,6 +122,7 @@ export async function POST(request: Request) {
       const [order] = await db
         .insert(orders)
         .values({
+          userId: sessionUser?.id ?? null,
           customerName,
           email,
           phone,
