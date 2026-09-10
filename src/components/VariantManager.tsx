@@ -4,7 +4,12 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ProductVariant } from "@/db/schema";
 import { adminVariantsClient } from "@/lib/hono";
-import { suggestSku } from "@/lib/variants";
+
+function suggestSku(productId: number, color: string, size: string): string {
+  const clean = (s: string) =>
+    s.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 12) || "STD";
+  return `P${productId}-${clean(color)}-${clean(size)}`;
+}
 
 type RowEdits = Record<number, { price: string; stock: string }>;
 

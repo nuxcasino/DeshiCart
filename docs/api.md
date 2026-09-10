@@ -271,3 +271,23 @@ layout redirects non-admins to `/login`.
 - **`PATCH /api/admin/reviews/[id]`** — `{ verified: boolean }`.
 - **`DELETE /api/admin/reviews/[id]`** — removes the review and recalculates the
   product's rating/review count.
+
+---
+
+## Product variants
+
+Products without active variants sell as simple products (product price/stock).
+Once a product has active variants, variant price/stock are authoritative:
+checkout requires a valid `variantId`, prices from the variant row, and reserves
+variant stock atomically. Order items snapshot `variant_id` + `sku`, so price
+changes never rewrite history. Storefront cards show "From ৳X" floors.
+
+- **`POST /api/admin/variants`** — `{ productId, sku, color?, size?, price,
+  compareAtPrice?, stock, image?, barcode?, weightGrams?, isActive? }`.
+  `409` on duplicate SKU or color/size combo.
+- **`PATCH /api/admin/variants/[id]`** — partial update (same guards).
+- **`DELETE /api/admin/variants/[id]`** — `409` when order history references it
+  (deactivate instead).
+- Checkout `items[]` accept `variantId`; `GET /api/products/:slug` includes
+  `variants`. Pages: product page selector (price/stock/SKU/image react to
+  color+size), `/admin/inventory` for variant stock.

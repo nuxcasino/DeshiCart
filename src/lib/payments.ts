@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { releaseStock } from "./stock";
+import { releaseLines } from "./checkout-lines";
 import { notifyPaymentReceived } from "./notify";
 import {
   querySslcommerzTransaction,
@@ -36,7 +36,7 @@ export async function settleOrderPayment(
         .select()
         .from(orderItems)
         .where(eq(orderItems.orderId, order.id));
-      await releaseStock(items);
+      await releaseLines(items);
       await db
         .update(orders)
         .set({ paymentStatus: "failed", status: "cancelled" })

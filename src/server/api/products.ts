@@ -7,6 +7,7 @@ import {
   getShopProducts,
   type SortKey,
 } from "@/lib/data";
+import { getProductVariants } from "@/lib/variants";
 import { NotFoundError } from "../errors";
 import { validationHook } from "../validate";
 
@@ -37,7 +38,7 @@ const app = new Hono()
   .get("/:slug", async (c) => {
     const product = await getProductBySlug(c.req.param("slug"));
     if (!product) throw new NotFoundError("Product not found.");
-    return c.json({ product });
+    return c.json({ product, variants: await getProductVariants(product.id) });
   });
 
 export type ProductsRoute = typeof app;

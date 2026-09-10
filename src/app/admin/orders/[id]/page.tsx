@@ -84,6 +84,9 @@ export default async function AdminOrderDetail({
                     <span className="text-ink-soft">
                       {item.size && item.size !== "One Size" ? `(${item.size}) ` : ""}× {item.quantity}
                     </span>
+                    {item.sku && (
+                      <span className="ml-1 font-mono text-[11px] text-ink-soft/70">{item.sku}</span>
+                    )}
                   </span>
                   <span className="font-bold">{formatBDT(item.price * item.quantity)}</span>
                 </li>

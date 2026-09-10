@@ -78,6 +78,27 @@ export function defaultVariant(
   return available.sort((a, b) => b.stock - a.stock)[0];
 }
 
+export type CardVariantInfo = {
+  floor: number | null;
+  defaultVariant: ProductVariant | null;
+};
+
+/** Batched card data: price floor + quick-add default per product. */
+export async function getCardVariantInfo(
+  productIds: number[]
+): Promise<Map<number, CardVariantInfo>> {
+  const info = new Map<number, CardVariantInfo>();
+  const byProduct = await getVariantsForProducts(productIds);
+  for (const pid of productIds) {
+    const variants = byProduct.get(pid) ?? [];
+    info.set(pid, {
+      floor: variants.length > 0 ? Math.min(...variants.map((v) => v.price)) : null,
+      defaultVariant: variants.length > 0 ? defaultVariant(variants) : null,
+    });
+  }
+  return info;
+}
+
 /** Atomic conditional decrement for variant stock (race-safe, no oversell). */
 export async function reserveVariantStock(
   variantId: number,
@@ -105,15 +126,4 @@ export async function releaseVariantStock(
     .update(productVariants)
     .set({ stock: sql`${productVariants.stock} + ${quantity}` })
     .where(eq(productVariants.id, variantId));
-}
-
-/** Suggested SKU for the admin form (editable before save). */
-export function suggestSku(
-  productId: number,
-  color: string,
-  size: string
-): string {
-  const clean = (s: string) =>
-    s.toUpperCase().replace(/[^A-Z0-9]+/g, "").slice(0, 12) || "STD";
-  return `P${productId}-${clean(color)}-${clean(size)}`;
 }

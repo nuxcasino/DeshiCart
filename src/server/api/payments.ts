@@ -2,12 +2,16 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { db } from "@/db";
-import { orderItems, orders, products } from "@/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { orderItems, orders } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
 import { applyCoupon, releaseCoupon } from "@/lib/coupons";
 import { shippingForCity } from "@/lib/shipping";
-import { findInsufficientStock, reserveStock } from "@/lib/stock";
+import {
+  releaseLines,
+  reserveLines,
+  resolveCheckoutLines,
+} from "@/lib/checkout-lines";
 import { getSiteUrl, initSslcommerzPayment } from "@/lib/sslcommerz";
 import { reconcileOrderPayment, settleOrderPayment } from "@/lib/payments";
 import {
@@ -19,6 +23,7 @@ import { validationHook } from "../validate";
 
 const item = z.object({
   productId: z.number().int().positive(),
+  variantId: z.number().int().positive().nullable().optional(),
   size: z.string().max(20).nullable().optional(),
   quantity: z.number().int().default(1),
 });
@@ -47,39 +52,22 @@ const app = new Hono()
     }
     const input = c.req.valid("json");
 
-    const ids = [...new Set(input.items.map((i) => i.productId))];
-    const dbProducts = await db
-      .select()
-      .from(products)
-      .where(inArray(products.id, ids));
-    const byId = new Map(dbProducts.map((p) => [p.id, p]));
-
-    const lineItems = input.items
-      .map((i) => {
-        const p = byId.get(i.productId);
-        if (!p) return null;
-        return {
-          productId: p.id,
-          name: p.name,
-          image: p.images[0] ?? "",
-          price: p.price,
-          size: i.size ?? null,
-          quantity: Math.min(10, Math.max(1, i.quantity || 1)),
-        };
-      })
-      .filter((x): x is NonNullable<typeof x> => x !== null);
+    const { lineItems, insufficient } = await resolveCheckoutLines(input.items);
 
     if (!lineItems.length) {
       return c.json({ error: "No valid items" }, 400);
     }
 
-    const insufficient = findInsufficientStock(
-      lineItems,
-      new Map(dbProducts.map((p) => [p.id, p.stock]))
-    );
     if (insufficient.length > 0) {
       return c.json(
-        { error: "Some items don't have enough stock", items: insufficient },
+        {
+          error: "Some items don't have enough stock",
+          items: insufficient.map(({ productId, name, available }) => ({
+            productId,
+            name,
+            available,
+          })),
+        },
         409
       );
     }
@@ -98,7 +86,7 @@ const app = new Hono()
     const shipping = await shippingForCity(input.city, subtotal - discount);
     const total = subtotal - discount + shipping;
 
-    const reserved = await reserveStock(lineItems);
+    const reserved = await reserveLines(lineItems);
     if (!reserved.ok) {
       if (couponCode) await releaseCoupon(couponCode);
       return c.json(
@@ -133,12 +121,21 @@ const app = new Hono()
         })
         .returning();
       orderId = order.id;
-      await db
-        .insert(orderItems)
-        .values(lineItems.map((li) => ({ ...li, orderId: order.id })));
+      await db.insert(orderItems).values(
+        lineItems.map((li) => ({
+          orderId: order.id,
+          productId: li.productId,
+          variantId: li.variantId,
+          sku: li.sku,
+          name: li.name,
+          image: li.image,
+          price: li.price,
+          size: li.size,
+          quantity: li.quantity,
+        }))
+      );
     } catch {
-      const { releaseStock } = await import("@/lib/stock");
-      await releaseStock(lineItems);
+      await releaseLines(lineItems);
       if (couponCode) await releaseCoupon(couponCode);
       return c.json({ error: "Could not start payment. Please try again." }, 500);
     }
@@ -159,8 +156,7 @@ const app = new Hono()
       });
       return c.json({ orderId, gatewayUrl });
     } catch (error) {
-      const { releaseStock } = await import("@/lib/stock");
-      await releaseStock(lineItems);
+      await releaseLines(lineItems);
       if (couponCode) await releaseCoupon(couponCode);
       await db
         .update(orders)
@@ -241,8 +237,7 @@ async function settleFailedCallback(
       .select()
       .from(orderItems)
       .where(eq(orderItems.orderId, order.id));
-    const { releaseStock } = await import("@/lib/stock");
-    await releaseStock(items);
+    await releaseLines(items);
     await db
       .update(orders)
       .set({ paymentStatus, status: "cancelled" })

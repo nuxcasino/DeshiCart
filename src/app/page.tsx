@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getCategories, getFeaturedProducts } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
+import { getCardVariantInfo } from "@/lib/variants";
 import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +25,7 @@ export default async function HomePage() {
     getFeaturedProducts(),
     getWishlistIds(),
   ]);
+  const variantInfo = await getCardVariantInfo(featured.map((p) => p.id));
 
   return (
     <div>
@@ -173,7 +175,12 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
             {featured.map((p) => (
-              <ProductCard key={p.id} product={p} wishlisted={wishlistIds.has(p.id)} />
+              <ProductCard
+                key={p.id}
+                product={p}
+                wishlisted={wishlistIds.has(p.id)}
+                variantInfo={variantInfo.get(p.id)}
+              />
             ))}
           </div>
         </div>

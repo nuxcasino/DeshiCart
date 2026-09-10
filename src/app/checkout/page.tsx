@@ -188,12 +188,13 @@ function CheckoutForm() {
       const payload = {
         ...form,
         paymentMethod,
-        couponCode: appliedCode ?? "",
-        items: items.map((i) => ({
-          productId: i.productId,
-          size: i.size,
-          quantity: i.quantity,
-        })),
+          couponCode: appliedCode ?? "",
+          items: items.map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            size: i.size,
+            quantity: i.quantity,
+          })),
       };
       const res = isOnline
         ? await paymentsClient.init.$post({ json: payload })

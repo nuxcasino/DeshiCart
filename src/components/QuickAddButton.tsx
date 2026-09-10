@@ -3,7 +3,17 @@
 import type { Product } from "@/db/schema";
 import { useCart } from "@/lib/cart-context";
 
-export default function QuickAddButton({ product }: { product: Product }) {
+export default function QuickAddButton({
+  product,
+  variantId = null,
+  price,
+  sizeLabel,
+}: {
+  product: Product;
+  variantId?: number | null;
+  price?: number;
+  sizeLabel?: string | null;
+}) {
   const { addItem } = useCart();
 
   return (
@@ -12,11 +22,13 @@ export default function QuickAddButton({ product }: { product: Product }) {
         e.preventDefault();
         addItem({
           productId: product.id,
+          variantId,
           slug: product.slug,
           name: product.name,
-          price: product.price,
+          price: price ?? product.price,
           image: product.images[0],
-          size: product.sizes[0] ?? null,
+          size: sizeLabel ?? product.sizes[0] ?? null,
+          sku: null,
         });
       }}
       className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-lg transition-all hover:bg-clay hover:text-white"

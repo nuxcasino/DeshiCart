@@ -8,6 +8,7 @@ import {
   getRelatedProducts,
 } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
+import { getCardVariantInfo, getProductVariants } from "@/lib/variants";
 import { formatBDT } from "@/lib/format";
 import Gallery from "@/components/Gallery";
 import PurchasePanel from "@/components/PurchasePanel";
@@ -45,12 +46,20 @@ export default async function ProductPage({
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [category, reviews, related, wishlistIds] = await Promise.all([
+  const [category, reviews, related, wishlistIds, variants] = await Promise.all([
     getCategoryById(product.categoryId),
     getProductReviews(product.id),
     getRelatedProducts(product),
     getWishlistIds(),
+    getProductVariants(product.id),
   ]);
+  const relatedVariantInfo = await getCardVariantInfo(related.map((p) => p.id));
+
+  const activeVariants = variants.filter((v) => v.isActive);
+  const floor =
+    activeVariants.length > 0
+      ? Math.min(...activeVariants.map((v) => v.price))
+      : null;
 
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.price
@@ -111,8 +120,13 @@ export default async function ProductPage({
           </a>
 
           <div className="mt-5 flex items-baseline gap-3">
+            {floor !== null && (
+              <span className="text-sm font-semibold uppercase tracking-wider text-ink-soft">
+                From
+              </span>
+            )}
             <span className="font-display text-3xl font-semibold">
-              {formatBDT(product.price)}
+              {formatBDT(floor ?? product.price)}
             </span>
             {product.compareAtPrice && (
               <>
@@ -133,7 +147,7 @@ export default async function ProductPage({
           </p>
 
           <div className="mt-7">
-            <PurchasePanel product={product} />
+            <PurchasePanel product={product} variants={variants} />
           </div>
 
           {product.details.length > 0 && (
@@ -263,7 +277,12 @@ export default async function ProductPage({
           </h2>
           <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
             {related.map((p) => (
-              <ProductCard key={p.id} product={p} wishlisted={wishlistIds.has(p.id)} />
+              <ProductCard
+                key={p.id}
+                product={p}
+                wishlisted={wishlistIds.has(p.id)}
+                variantInfo={relatedVariantInfo.get(p.id)}
+              />
             ))}
           </div>
         </section>

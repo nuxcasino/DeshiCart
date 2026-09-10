@@ -96,6 +96,7 @@ export default async function OrderPage({
                 <p className="mt-0.5 text-xs text-ink-soft">
                   {item.size && item.size !== "One Size" ? `Size ${item.size} · ` : ""}
                   Qty {item.quantity}
+                  {item.sku ? ` · ${item.sku}` : ""}
                 </p>
               </div>
               <p className="text-sm font-bold">

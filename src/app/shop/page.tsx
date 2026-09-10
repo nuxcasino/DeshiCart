@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getCategories, getShopProducts, type SortKey } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
+import { getCardVariantInfo } from "@/lib/variants";
 import ProductCard from "@/components/ProductCard";
 import FiltersBar from "@/components/FiltersBar";
 import type { Metadata } from "next";
@@ -43,6 +44,7 @@ export default async function ShopPage({
     getShopProducts({ category, sort, q, minPrice, maxPrice }),
     getWishlistIds(),
   ]);
+  const variantInfo = await getCardVariantInfo(products.map((p) => p.id));
 
   const activeCat = categories.find((c) => c.slug === category);
 
@@ -85,7 +87,12 @@ export default async function ShopPage({
       ) : (
         <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} wishlisted={wishlistIds.has(p.id)} />
+            <ProductCard
+              key={p.id}
+              product={p}
+              wishlisted={wishlistIds.has(p.id)}
+              variantInfo={variantInfo.get(p.id)}
+            />
           ))}
         </div>
       )}

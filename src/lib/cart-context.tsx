@@ -13,11 +13,13 @@ import {
 
 export type CartItem = {
   productId: number;
+  variantId: number | null;
   slug: string;
   name: string;
   price: number;
   image: string;
   size: string | null;
+  sku: string | null;
   quantity: number;
 };
 
@@ -29,8 +31,8 @@ type CartContextValue = {
   openCart: () => void;
   closeCart: () => void;
   addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-  removeItem: (productId: number, size: string | null) => void;
-  updateQuantity: (productId: number, size: string | null, quantity: number) => void;
+  removeItem: (productId: number, size: string | null, variantId?: number | null) => void;
+  updateQuantity: (productId: number, size: string | null, quantity: number, variantId?: number | null) => void;
   clearCart: () => void;
 };
 
@@ -70,37 +72,55 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = useCallback(
     (item: Omit<CartItem, "quantity">, quantity = 1) => {
+      const variantId = item.variantId ?? null;
       setItems((prev) => {
         const idx = prev.findIndex(
-          (i) => i.productId === item.productId && i.size === item.size
+          (i) =>
+            i.productId === item.productId &&
+            i.size === item.size &&
+            (i.variantId ?? null) === variantId
         );
         if (idx >= 0) {
           const next = [...prev];
           next[idx] = { ...next[idx], quantity: next[idx].quantity + quantity };
           return next;
         }
-        return [...prev, { ...item, quantity }];
+        return [...prev, { ...item, variantId, sku: item.sku ?? null, quantity }];
       });
       setIsOpen(true);
     },
     []
   );
 
-  const removeItem = useCallback((productId: number, size: string | null) => {
-    setItems((prev) =>
-      prev.filter((i) => !(i.productId === productId && i.size === size))
-    );
-  }, []);
+  const matches = (
+    i: CartItem,
+    productId: number,
+    size: string | null,
+    variantId?: number | null
+  ) =>
+    i.productId === productId &&
+    i.size === size &&
+    (variantId === undefined || (i.variantId ?? null) === (variantId ?? null));
+
+  const removeItem = useCallback(
+    (productId: number, size: string | null, variantId?: number | null) => {
+      setItems((prev) => prev.filter((i) => !matches(i, productId, size, variantId)));
+    },
+    []
+  );
 
   const updateQuantity = useCallback(
-    (productId: number, size: string | null, quantity: number) => {
+    (
+      productId: number,
+      size: string | null,
+      quantity: number,
+      variantId?: number | null
+    ) => {
       setItems((prev) =>
         quantity <= 0
-          ? prev.filter((i) => !(i.productId === productId && i.size === size))
+          ? prev.filter((i) => !matches(i, productId, size, variantId))
           : prev.map((i) =>
-              i.productId === productId && i.size === size
-                ? { ...i, quantity }
-                : i
+              matches(i, productId, size, variantId) ? { ...i, quantity } : i
             )
       );
     },

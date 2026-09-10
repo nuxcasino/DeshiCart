@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Product } from "@/db/schema";
 import { formatBDT } from "@/lib/format";
+import type { CardVariantInfo } from "@/lib/variants";
 import Stars from "./Stars";
 import QuickAddButton from "./QuickAddButton";
 import WishlistButton from "./WishlistButton";
@@ -9,11 +10,16 @@ import WishlistButton from "./WishlistButton";
 export default function ProductCard({
   product,
   wishlisted = false,
+  variantInfo,
 }: {
   product: Product;
   wishlisted?: boolean;
+  variantInfo?: CardVariantInfo;
 }) {
-  const soldOut = product.stock <= 0;
+  const hasVariants = (variantInfo?.floor ?? null) !== null;
+  const displayPrice = variantInfo?.floor ?? product.price;
+  const defaultVariant = variantInfo?.defaultVariant ?? null;
+  const soldOut = hasVariants ? !defaultVariant : product.stock <= 0;
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.price
       ? Math.round(
@@ -75,7 +81,16 @@ export default function ProductCard({
 
       {!soldOut && (
         <div className="absolute right-3 top-3 flex translate-y-1 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          <QuickAddButton product={product} />
+          <QuickAddButton
+            product={product}
+            variantId={defaultVariant?.id ?? null}
+            price={displayPrice}
+            sizeLabel={
+              defaultVariant
+                ? [defaultVariant.color, defaultVariant.size].filter(Boolean).join(" / ") || null
+                : undefined
+            }
+          />
           <WishlistButton
             productId={product.id}
             name={product.name}
@@ -106,8 +121,13 @@ export default function ProductCard({
           </h3>
         </Link>
         <div className="mt-1 flex items-baseline gap-2">
-          <span className="text-sm font-bold">{formatBDT(product.price)}</span>
-          {product.compareAtPrice && (
+          {hasVariants && (
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-soft">
+              From
+            </span>
+          )}
+          <span className="text-sm font-bold">{formatBDT(displayPrice)}</span>
+          {!hasVariants && product.compareAtPrice && (
             <span className="text-xs text-ink-soft/70 line-through">
               {formatBDT(product.compareAtPrice)}
             </span>
