@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
@@ -404,11 +405,12 @@ function CheckoutForm() {
               {items.map((item) => (
                 <li key={`${item.productId}-${item.size}`} className="flex gap-3">
                   <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-sand">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={item.image}
                       alt={item.name}
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="56px"
+                      className="object-cover"
                     />
                     <span className="absolute -right-0 -top-0 flex h-5 w-5 items-center justify-center rounded-bl-lg bg-ink text-[10px] font-bold text-cream">
                       {item.quantity}

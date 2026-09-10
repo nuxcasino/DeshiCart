@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
@@ -81,12 +82,13 @@ export default async function OrderPage({
         <ul className="divide-y divide-sand px-6">
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-4 py-4">
-              <div className="h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-sand">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-lg bg-sand">
+                <Image
                   src={item.image}
                   alt={item.name}
-                  className="h-full w-full object-cover"
+                  fill
+                  sizes="56px"
+                  className="object-cover"
                 />
               </div>
               <div className="flex-1">

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 export default function Gallery({
@@ -16,13 +17,14 @@ export default function Gallery({
   return (
     <div>
       <div className="relative overflow-hidden rounded-2xl bg-sand">
-        <div className="aspect-[3/4]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="relative aspect-[3/4]">
+          <Image
             key={active}
             src={images[active]}
             alt={`${name} — view ${active + 1}`}
-            className="h-full w-full object-cover animate-fade-in"
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover animate-fade-in"
           />
         </div>
         {badge && (
@@ -66,9 +68,8 @@ export default function Gallery({
               }`}
               aria-label={`View image ${i + 1}`}
             >
-              <div className="aspect-[3/4] bg-sand">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img} alt="" className="h-full w-full object-cover" />
+              <div className="relative aspect-[3/4] bg-sand">
+                <Image src={img} alt="" fill sizes="20vw" className="object-cover" />
               </div>
             </button>
           ))}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getCategories, getFeaturedProducts } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import ProductCard from "@/components/ProductCard";
@@ -29,11 +30,13 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-ink text-cream">
         <div className="absolute inset-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={HERO_IMG}
             alt="DeshiCart fashion editorial"
-            className="h-full w-full object-cover object-center opacity-50"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center opacity-50"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/70 to-ink/20" />
         </div>
@@ -125,13 +128,13 @@ export default async function HomePage() {
               href={`/shop?category=${cat.slug}`}
               className="group relative overflow-hidden rounded-xl bg-sand"
             >
-              <div className="aspect-[3/4] overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+              <div className="relative aspect-[3/4] overflow-hidden">
+                <Image
                   src={cat.image}
                   alt={cat.name}
-                  loading="lazy"
-                  className="img-zoom h-full w-full object-cover"
+                  fill
+                  sizes="(max-width: 1024px) 50vw, 25vw"
+                  className="img-zoom object-cover"
                 />
               </div>
               <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
@@ -215,13 +218,13 @@ export default async function HomePage() {
               Explore Everything
             </Link>
           </div>
-          <div className="order-1 h-72 lg:order-2 lg:h-full">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="relative order-1 h-72 lg:order-2 lg:h-full lg:min-h-[480px]">
+            <Image
               src="https://images.pexels.com/photos/15870230/pexels-photo-15870230.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=900"
               alt="DeshiCart style editorial"
-              loading="lazy"
-              className="h-full w-full object-cover"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
             />
           </div>
         </div>

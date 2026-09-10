@@ -4,18 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
+import { LangToggle, useLang, type DictKey } from "@/lib/i18n";
 
-const nav = [
-  { href: "/", label: "Home" },
-  { href: "/shop", label: "Shop All" },
-  { href: "/shop?category=t-shirts", label: "T-Shirts" },
-  { href: "/shop?category=shirts", label: "Shirts" },
-  { href: "/shop?category=women", label: "Women" },
-  { href: "/shop?category=accessories", label: "Accessories" },
+const nav: Array<{ href: string; labelKey: DictKey }> = [
+  { href: "/", labelKey: "nav.home" },
+  { href: "/shop", labelKey: "nav.shop" },
+  { href: "/shop?category=t-shirts", labelKey: "nav.tshirts" },
+  { href: "/shop?category=shirts", labelKey: "nav.shirts" },
+  { href: "/shop?category=women", labelKey: "nav.women" },
+  { href: "/shop?category=accessories", labelKey: "nav.accessories" },
 ];
 
 export default function Header() {
   const { count, openCart } = useCart();
+  const { t } = useLang();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountName, setAccountName] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40">
       <div className="bg-ink text-cream text-center text-[11px] sm:text-xs tracking-[0.18em] uppercase py-2 px-4">
-        Free delivery across Bangladesh on orders over ৳3,000 · Cash on delivery available
+        {t("header.announce")}
       </div>
       <div
         className={`transition-all duration-300 border-b ${
@@ -59,7 +61,7 @@ export default function Header() {
             <button
               className="lg:hidden -ml-2 p-2 text-ink"
               onClick={() => setMenuOpen((v) => !v)}
-              aria-label="Toggle menu"
+              aria-label={t("header.menu")}
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                 {menuOpen ? (
@@ -86,16 +88,17 @@ export default function Header() {
                   href={item.href}
                   className="text-[13px] font-medium tracking-wide text-ink-soft hover:text-clay transition-colors"
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Link>
               ))}
             </nav>
 
             <div className="flex items-center gap-1">
+              <LangToggle />
               <Link
                 href="/shop"
                 className="hidden sm:flex p-2 text-ink hover:text-clay transition-colors"
-                aria-label="Search products"
+                aria-label={t("header.search")}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
                   <circle cx="11" cy="11" r="7" />
@@ -114,7 +117,7 @@ export default function Header() {
               <Link
                 href={accountName ? "/account" : "/login"}
                 className="flex items-center gap-1.5 p-2 text-ink hover:text-clay transition-colors"
-                aria-label={accountName ? "My account" : "Log in"}
+                aria-label={accountName ? t("header.account") : t("header.login")}
               >                {accountName ? (
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-clay font-display text-xs font-semibold text-white">
                     {accountName.trim()[0]?.toUpperCase() ?? "•"}
@@ -146,18 +149,18 @@ export default function Header() {
         </div>
 
         {menuOpen && (
-          <nav className="lg:hidden border-t border-sand bg-cream px-4 pb-4 pt-2 animate-fade-in">
-            {nav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMenuOpen(false)}
-                className="block py-2.5 text-sm font-medium text-ink-soft hover:text-clay transition-colors border-b border-sand/60 last:border-0"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+            <nav className="lg:hidden border-t border-sand bg-cream px-4 pb-4 pt-2 animate-fade-in">
+              {nav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMenuOpen(false)}
+                  className="block py-2.5 text-sm font-medium text-ink-soft hover:text-clay transition-colors border-b border-sand/60 last:border-0"
+                >
+                  {t(item.labelKey)}
+                </Link>
+              ))}
+            </nav>
         )}
       </div>
     </header>

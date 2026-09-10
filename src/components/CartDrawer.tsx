@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect } from "react";
 import { useCart } from "@/lib/cart-context";
+import { useLang } from "@/lib/i18n";
 import { formatBDT, FREE_SHIPPING_THRESHOLD, shippingFor } from "@/lib/format";
 
 export default function CartDrawer() {
   const { items, isOpen, closeCart, subtotal, updateQuantity, removeItem } =
     useCart();
+  const { t } = useLang();
 
   useEffect(() => {
     if (isOpen) {
@@ -39,7 +42,7 @@ export default function CartDrawer() {
       <aside className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-cream shadow-2xl animate-slide-in">
         <div className="flex items-center justify-between border-b border-sand px-5 py-4">
           <h2 className="font-display text-xl font-semibold">
-            Your Bag{" "}
+            {t("cart.title")}{" "}
             <span className="text-sm font-sans font-medium text-ink-soft">
               ({items.reduce((a, i) => a + i.quantity, 0)})
             </span>
@@ -47,7 +50,7 @@ export default function CartDrawer() {
           <button
             onClick={closeCart}
             className="p-2 text-ink-soft hover:text-ink transition-colors"
-            aria-label="Close cart"
+            aria-label={t("cart.close")}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
@@ -60,15 +63,15 @@ export default function CartDrawer() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sand text-3xl">
               🛍️
             </div>
-            <p className="font-display text-lg">Your bag is empty</p>
+            <p className="font-display text-lg">{t("cart.empty")}</p>
             <p className="text-sm text-ink-soft">
-              Fresh drops are waiting. Find something you love.
+              {t("cart.emptyHint")}
             </p>
             <button
               onClick={closeCart}
               className="mt-2 rounded-full bg-ink px-6 py-3 text-sm font-semibold text-cream hover:bg-clay transition-colors"
             >
-              Start Shopping
+              {t("cart.start")}
             </button>
           </div>
         ) : (
@@ -76,12 +79,11 @@ export default function CartDrawer() {
             <div className="border-b border-sand px-5 py-3">
               {remaining > 0 ? (
                 <p className="text-xs text-ink-soft">
-                  Add <span className="font-semibold text-clay">{formatBDT(remaining)}</span> more for{" "}
-                  <span className="font-semibold">free delivery</span>
+                  {t("cart.moreForFree")} <span className="font-semibold text-clay">{formatBDT(remaining)}</span> {t("cart.freeDelivery")}
                 </p>
               ) : (
                 <p className="text-xs font-semibold text-leaf">
-                  🎉 You&apos;ve unlocked free delivery!
+                  {t("cart.unlocked")}
                 </p>
               )}
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-sand">
@@ -99,13 +101,14 @@ export default function CartDrawer() {
                     <Link
                       href={`/product/${item.slug}`}
                       onClick={closeCart}
-                      className="h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-sand"
+                      className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-sand"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={item.image}
                         alt={item.name}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="80px"
+                        className="object-cover"
                       />
                     </Link>
                     <div className="flex flex-1 flex-col">
@@ -120,7 +123,7 @@ export default function CartDrawer() {
                         <button
                           onClick={() => removeItem(item.productId, item.size)}
                           className="text-ink-soft/60 hover:text-clay transition-colors"
-                          aria-label={`Remove ${item.name}`}
+                          aria-label={`${t("cart.remove")} ${item.name}`}
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                             <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
@@ -128,7 +131,7 @@ export default function CartDrawer() {
                         </button>
                       </div>
                       {item.size && item.size !== "One Size" && (
-                        <p className="mt-0.5 text-xs text-ink-soft">Size: {item.size}</p>
+                        <p className="mt-0.5 text-xs text-ink-soft">{t("cart.size")}: {item.size}</p>
                       )}
                       <div className="mt-auto flex items-center justify-between">
                         <div className="flex items-center rounded-full border border-sand">
@@ -137,7 +140,7 @@ export default function CartDrawer() {
                               updateQuantity(item.productId, item.size, item.quantity - 1)
                             }
                             className="px-2.5 py-1 text-sm text-ink-soft hover:text-clay"
-                            aria-label="Decrease quantity"
+                            aria-label={t("cart.decrease")}
                           >
                             −
                           </button>
@@ -149,7 +152,7 @@ export default function CartDrawer() {
                               updateQuantity(item.productId, item.size, item.quantity + 1)
                             }
                             className="px-2.5 py-1 text-sm text-ink-soft hover:text-clay"
-                            aria-label="Increase quantity"
+                            aria-label={t("cart.increase")}
                           >
                             +
                           </button>
@@ -166,13 +169,13 @@ export default function CartDrawer() {
 
             <div className="border-t border-sand px-5 py-4">
               <div className="mb-1 flex justify-between text-sm">
-                <span className="text-ink-soft">Subtotal</span>
+                <span className="text-ink-soft">{t("cart.subtotal")}</span>
                 <span className="font-semibold">{formatBDT(subtotal)}</span>
               </div>
               <div className="mb-3 flex justify-between text-sm">
-                <span className="text-ink-soft">Delivery</span>
+                <span className="text-ink-soft">{t("cart.delivery")}</span>
                 <span className="font-semibold">
-                  {shipping === 0 ? "Free" : formatBDT(shipping)}
+                  {shipping === 0 ? t("cart.free") : formatBDT(shipping)}
                 </span>
               </div>
               <Link
@@ -180,13 +183,13 @@ export default function CartDrawer() {
                 onClick={closeCart}
                 className="block w-full rounded-full bg-ink py-3.5 text-center text-sm font-bold text-cream transition-all hover:bg-clay hover:shadow-lg"
               >
-                Checkout · {formatBDT(subtotal + shipping)}
+                {t("cart.checkout")} · {formatBDT(subtotal + shipping)}
               </Link>
               <button
                 onClick={closeCart}
                 className="mt-2 w-full py-2 text-center text-xs font-medium text-ink-soft underline-offset-4 hover:underline"
               >
-                Continue shopping
+                {t("cart.continue")}
               </button>
             </div>
           </>

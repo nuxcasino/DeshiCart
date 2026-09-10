@@ -3,9 +3,11 @@ import type { ReactNode } from "react";
 import { Fraunces, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/lib/cart-context";
+import { LangProvider } from "@/lib/i18n";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
+import ChatButton from "@/components/ChatButton";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -45,6 +47,7 @@ export const metadata: Metadata = {
     description:
       "Trendy tees, sharp shirts and statement accessories — premium fabric, deshi soul.",
   },
+  themeColor: "#1b1611",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -52,10 +55,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={`${fraunces.variable} ${manrope.variable}`}>
       <body className="bg-cream text-ink antialiased">
         <CartProvider>
-          <Header />
-          <CartDrawer />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          <LangProvider>
+            <Header />
+            <CartDrawer />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+            <ChatButton />
+          </LangProvider>
         </CartProvider>
         <Analytics />
       </body>

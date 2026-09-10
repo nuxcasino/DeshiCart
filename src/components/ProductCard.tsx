@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Product } from "@/db/schema";
 import { formatBDT } from "@/lib/format";
 import Stars from "./Stars";
@@ -27,21 +28,21 @@ export default function ProductCard({
         className="block overflow-hidden rounded-xl bg-sand"
       >
         <div className="relative aspect-[3/4] overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={product.images[0]}
             alt={product.name}
-            loading="lazy"
-            className="img-zoom h-full w-full object-cover"
+            fill
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+            className="img-zoom object-cover"
           />
           {product.images[1] && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
+            <Image
               src={product.images[1]}
               alt=""
-              loading="lazy"
               aria-hidden
-              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              className="absolute inset-0 object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
             />
           )}
           <div className="absolute left-3 top-3 flex flex-col gap-1.5">
