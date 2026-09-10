@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { reviewsClient } from "@/lib/hono";
 
 export default function ReviewForm({ productId }: { productId: number }) {
   const router = useRouter();
@@ -17,10 +18,8 @@ export default function ReviewForm({ productId }: { productId: number }) {
     e.preventDefault();
     setStatus("sending");
     try {
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId, author, title, body, rating }),
+      const res = await reviewsClient.index.$post({
+        json: { productId, author, title, body, rating },
       });
       if (!res.ok) throw new Error("failed");
       setStatus("done");
