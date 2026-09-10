@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Review } from "@/db/schema";
+import { adminReviewsClient } from "@/lib/hono";
 import Stars from "./Stars";
 
 export default function ReviewModeration({
@@ -19,10 +20,9 @@ export default function ReviewModeration({
   const toggleVerified = async (review: Review) => {
     setBusyId(review.id);
     try {
-      const res = await fetch(`/api/admin/reviews/${review.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verified: !review.verified }),
+      const res = await adminReviewsClient[":id"].$patch({
+        param: { id: String(review.id) },
+        json: { verified: !review.verified },
       });
       if (res.ok) {
         setItems((prev) =>
@@ -39,7 +39,9 @@ export default function ReviewModeration({
     if (!confirm("Delete this review? The product rating will be recalculated.")) return;
     setBusyId(review.id);
     try {
-      const res = await fetch(`/api/admin/reviews/${review.id}`, { method: "DELETE" });
+      const res = await adminReviewsClient[":id"].$delete({
+        param: { id: String(review.id) },
+      });
       if (res.ok) {
         setItems((prev) => prev.filter((r) => r.id !== review.id));
         router.refresh();

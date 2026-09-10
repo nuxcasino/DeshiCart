@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Category } from "@/db/schema";
+import { adminCategoriesClient } from "@/lib/hono";
 
 export default function CategoryManager({ initial }: { initial: Category[] }) {
   const router = useRouter();
@@ -16,17 +17,17 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(typeof body?.error === "string" ? body.error : "Could not create category.");
+      const res = await adminCategoriesClient.index.$post({ json: form });
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        category?: Category;
+      };
+      if (!res.ok || !body.category) {
+        setError(body?.error ?? "Could not create category.");
         return;
       }
-      setItems((prev) => [...prev, body.category]);
+      const created = body.category;
+      setItems((prev) => [...prev, created]);
       setForm({ name: "", slug: "", tagline: "", image: "" });
       router.refresh();
     } finally {
@@ -36,10 +37,12 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
 
   const remove = async (cat: Category) => {
     if (!confirm(`Delete category "${cat.name}"? Only empty categories can be deleted.`)) return;
-    const res = await fetch(`/api/admin/categories/${cat.id}`, { method: "DELETE" });
-    const body = await res.json().catch(() => ({}));
+    const res = await adminCategoriesClient[":id"].$delete({
+      param: { id: String(cat.id) },
+    });
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
     if (!res.ok) {
-      setError(typeof body?.error === "string" ? body.error : "Delete failed.");
+      setError(body?.error ?? "Delete failed.");
       return;
     }
     setItems((prev) => prev.filter((c) => c.id !== cat.id));

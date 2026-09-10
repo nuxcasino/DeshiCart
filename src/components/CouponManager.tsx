@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Coupon } from "@/db/schema";
+import { adminCouponsClient } from "@/lib/hono";
 
 export default function CouponManager({ initial }: { initial: Coupon[] }) {
   const router = useRouter();
   const [items, setItems] = useState<Coupon[]>(initial);
   const [form, setForm] = useState({
     code: "",
-    type: "flat",
+    type: "flat" as "flat" | "percent",
     value: "",
     minSubtotal: "",
     maxUses: "",
@@ -23,17 +24,19 @@ export default function CouponManager({ initial }: { initial: Coupon[] }) {
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/coupons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, maxUses: form.maxUses || null }),
+      const res = await adminCouponsClient.index.$post({
+        json: { ...form, maxUses: form.maxUses || null },
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(typeof body?.error === "string" ? body.error : "Could not create coupon.");
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        coupon?: Coupon;
+      };
+      if (!res.ok || !body.coupon) {
+        setError(body?.error ?? "Could not create coupon.");
         return;
       }
-      setItems((prev) => [body.coupon, ...prev]);
+      const created = body.coupon;
+      setItems((prev) => [created, ...prev]);
       setForm({ code: "", type: "flat", value: "", minSubtotal: "", maxUses: "", expiresAt: "" });
       router.refresh();
     } finally {
@@ -42,10 +45,9 @@ export default function CouponManager({ initial }: { initial: Coupon[] }) {
   };
 
   const toggle = async (c: Coupon) => {
-    const res = await fetch(`/api/admin/coupons/${c.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ active: !c.active }),
+    const res = await adminCouponsClient[":id"].$patch({
+      param: { id: String(c.id) },
+      json: { active: !c.active },
     });
     if (res.ok) {
       setItems((prev) => prev.map((x) => (x.id === c.id ? { ...x, active: !x.active } : x)));
@@ -55,7 +57,9 @@ export default function CouponManager({ initial }: { initial: Coupon[] }) {
 
   const remove = async (c: Coupon) => {
     if (!confirm(`Delete coupon "${c.code}"?`)) return;
-    const res = await fetch(`/api/admin/coupons/${c.id}`, { method: "DELETE" });
+    const res = await adminCouponsClient[":id"].$delete({
+      param: { id: String(c.id) },
+    });
     if (res.ok) {
       setItems((prev) => prev.filter((x) => x.id !== c.id));
       router.refresh();
@@ -116,7 +120,7 @@ export default function CouponManager({ initial }: { initial: Coupon[] }) {
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-soft">Type</span>
-          <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} className={`${input} bg-white`}>
+          <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as "flat" | "percent" }))} className={`${input} bg-white`}>
             <option value="flat">Flat (BDT)</option>
             <option value="percent">Percent (%)</option>
           </select>

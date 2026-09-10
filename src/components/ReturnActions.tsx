@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Order, ReturnRequest } from "@/db/schema";
+import { adminReturnsClient } from "@/lib/hono";
 
 export default function ReturnActions({
   request,
@@ -20,14 +21,18 @@ export default function ReturnActions({
     setBusy(true);
     setMessage(null);
     try {
-      const res = await fetch(`/api/admin/returns/${request.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+      const res = await adminReturnsClient[":id"].$post({
+        param: { id: String(request.id) },
+        json: { action },
       });
-      const body = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        status?: string;
+        refund?: string;
+        manual?: boolean;
+      };
       if (!res.ok) {
-        setMessage(typeof body?.error === "string" ? body.error : "Action failed.");
+        setMessage(body?.error ?? "Action failed.");
         return;
       }
       setMessage(

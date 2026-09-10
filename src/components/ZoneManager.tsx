@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ShippingZone } from "@/db/schema";
+import { adminZonesClient } from "@/lib/hono";
 
 export default function ZoneManager({ initial }: { initial: ShippingZone[] }) {
   const router = useRouter();
@@ -16,19 +17,21 @@ export default function ZoneManager({ initial }: { initial: ShippingZone[] }) {
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/zones", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, freeOver: form.freeOver || null }),
+      const res = await adminZonesClient.index.$post({
+        json: { ...form, freeOver: form.freeOver || null },
       });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(typeof body?.error === "string" ? body.error : "Could not save zone.");
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        zone?: ShippingZone;
+      };
+      if (!res.ok || !body.zone) {
+        setError(body?.error ?? "Could not save zone.");
         return;
       }
+      const saved = body.zone;
       setItems((prev) => {
-        const next = prev.filter((z) => z.city !== body.zone.city);
-        return [...next, body.zone].sort((a, b) => a.city.localeCompare(b.city));
+        const next = prev.filter((z) => z.city !== saved.city);
+        return [...next, saved].sort((a, b) => a.city.localeCompare(b.city));
       });
       setForm({ city: "", fee: "", freeOver: "3000" });
       router.refresh();
@@ -39,7 +42,9 @@ export default function ZoneManager({ initial }: { initial: ShippingZone[] }) {
 
   const remove = async (z: ShippingZone) => {
     if (!confirm(`Delete the ${z.city} zone? Checkout falls back to the flat rate.`)) return;
-    const res = await fetch(`/api/admin/zones/${z.id}`, { method: "DELETE" });
+    const res = await adminZonesClient[":id"].$delete({
+      param: { id: String(z.id) },
+    });
     if (res.ok) {
       setItems((prev) => prev.filter((x) => x.id !== z.id));
       router.refresh();

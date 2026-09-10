@@ -12,6 +12,13 @@ import type { ReturnsRoute } from "@/server/api/returns";
 import type { ReviewsRoute } from "@/server/api/reviews";
 import type { ShippingRoute } from "@/server/api/shipping";
 import type { WishlistRoute } from "@/server/api/wishlist";
+import type { AdminCategoriesRoute } from "@/server/api/admin/categories";
+import type { AdminCouponsRoute } from "@/server/api/admin/coupons";
+import type { AdminOrdersRoute } from "@/server/api/admin/orders";
+import type { AdminProductsRoute } from "@/server/api/admin/products";
+import type { AdminReturnsRoute } from "@/server/api/admin/returns";
+import type { AdminReviewsRoute } from "@/server/api/admin/reviews";
+import type { AdminZonesRoute } from "@/server/api/admin/zones";
 
 // Per-domain typed RPC clients (§7: split clients keep the type graph small).
 // Server components should keep importing the service layer (src/lib/*)
@@ -29,3 +36,10 @@ export const shippingClient = hc<ShippingRoute>("/api/shipping");
 export const wishlistClient = hc<WishlistRoute>("/api/wishlist");
 export const contactClient = hc<ContactRoute>("/api/contact");
 export const returnsClient = hc<ReturnsRoute>("/api/returns");
+export const adminProductsClient = hc<AdminProductsRoute>("/api/admin/products");
+export const adminCategoriesClient = hc<AdminCategoriesRoute>("/api/admin/categories");
+export const adminOrdersClient = hc<AdminOrdersRoute>("/api/admin/orders");
+export const adminReviewsClient = hc<AdminReviewsRoute>("/api/admin/reviews");
+export const adminCouponsClient = hc<AdminCouponsRoute>("/api/admin/coupons");
+export const adminZonesClient = hc<AdminZonesRoute>("/api/admin/zones");
+export const adminReturnsClient = hc<AdminReturnsRoute>("/api/admin/returns");

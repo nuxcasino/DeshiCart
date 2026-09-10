@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Category, Product } from "@/db/schema";
+import { adminProductsClient } from "@/lib/hono";
 
 type Draft = {
   name: string;
@@ -66,15 +67,15 @@ export default function ProductForm({
     setSaving(true);
     setError(null);
     try {
-      const url = product ? `/api/admin/products/${product.id}` : "/api/admin/products";
-      const res = await fetch(url, {
-        method: product ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const body = await res.json().catch(() => ({}));
+      const res = product
+        ? await adminProductsClient[":id"].$patch({
+            param: { id: String(product.id) },
+            json: form,
+          })
+        : await adminProductsClient.index.$post({ json: form });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(typeof body?.error === "string" ? body.error : "Save failed.");
+        setError(body?.error ?? "Save failed.");
         return;
       }
       router.push("/admin/products");
@@ -88,10 +89,12 @@ export default function ProductForm({
     if (!product || !confirm(`Delete "${product.name}"? Its reviews will be removed too.`)) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/admin/products/${product.id}`, { method: "DELETE" });
+      const res = await adminProductsClient[":id"].$delete({
+        param: { id: String(product.id) },
+      });
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        setError(typeof body?.error === "string" ? body.error : "Delete failed.");
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(body?.error ?? "Delete failed.");
         return;
       }
       router.push("/admin/products");
