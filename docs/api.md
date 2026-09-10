@@ -194,3 +194,31 @@ Session cookie (`deshicart_session`) is HttpOnly; login/signup set it via
 
 Pages: `/login`, `/signup`, `/account` (order history + address book, redirects
 to `/login` when anonymous).
+
+---
+
+## Admin (`/admin`, all endpoints 403 without `is_admin`)
+
+Bootstrap the first admin: sign up normally, then flip `is_admin` to `true` for
+that row via `npm run db:studio` (or
+`UPDATE users SET is_admin = true WHERE email = 'you@email.com'`). The admin
+layout redirects non-admins to `/login`.
+
+- **Pages:** `/admin` (revenue, counts, low stock, latest orders),
+  `/admin/orders`, `/admin/orders/[id]` (customer, payment metadata incl.
+  bank ref/channel/settled amount/risk, items, status form + gateway re-check),
+  `/admin/products`, `/admin/products/new`, `/admin/products/[id]`,
+  `/admin/categories`, `/admin/reviews`.
+- **`PATCH /api/admin/orders/[id]`** — `{ status?, paymentStatus? }` (values
+  validated against allow-lists).
+- **`POST /api/admin/products`** — full product body (name, slug auto-normalized,
+  description, price, categoryId, details/images one-per-line, sizes/colors
+  comma-separated, badge, featured, stock). `409` on duplicate slug.
+- **`PATCH /api/admin/products/[id]`** — partial update, same parsing.
+- **`DELETE /api/admin/products/[id]`** — removes the product and its reviews
+  (order history snapshots are unaffected).
+- **`POST /api/admin/categories`** — `{ name, slug?, tagline?, image? }`.
+- **`DELETE /api/admin/categories/[id]`** — `409` when products still use it.
+- **`PATCH /api/admin/reviews/[id]`** — `{ verified: boolean }`.
+- **`DELETE /api/admin/reviews/[id]`** — removes the review and recalculates the
+  product's rating/review count.
