@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { categories, products } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import ProductForm from "@/components/ProductForm";
+import VariantManager from "@/components/VariantManager";
+import { getProductVariants } from "@/lib/variants";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export default async function EditProductPage({
   const [product] = await db.select().from(products).where(eq(products.id, productId));
   if (!product) notFound();
   const cats = await db.select().from(categories);
+  const variants = await getProductVariants(productId, false);
 
   return (
     <div>
@@ -38,6 +41,16 @@ export default async function EditProductPage({
       </div>
       <div className="mt-4">
         <ProductForm categories={cats} product={product} />
+      </div>
+
+      <h2 className="mt-10 font-display text-2xl font-semibold tracking-tight">
+        Variants ({variants.length})
+      </h2>
+      <p className="mt-1 text-sm text-ink-soft">
+        Variant price and stock override the product defaults once variants exist.
+      </p>
+      <div className="mt-4">
+        <VariantManager productId={product.id} initial={variants} />
       </div>
     </div>
   );

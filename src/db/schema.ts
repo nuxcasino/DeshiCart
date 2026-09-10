@@ -7,6 +7,8 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 
 export const categories = pgTable("categories", {
@@ -52,34 +54,41 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const orders = pgTable("orders", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id),
-  customerName: text("customer_name").notNull(),
-  email: text("email").notNull(),
-  phone: text("phone").notNull(),
-  address: text("address").notNull(),
-  city: text("city").notNull(),
-  notes: text("notes"),
-  paymentMethod: text("payment_method").notNull(),
-  subtotal: integer("subtotal").notNull(),
-  discount: integer("discount").notNull().default(0),
-  couponCode: text("coupon_code"),
-  shipping: integer("shipping").notNull(),
-  total: integer("total").notNull(),
-  status: text("status").notNull().default("confirmed"),
-  paymentStatus: text("payment_status").notNull().default("pending"),
-  transactionId: text("transaction_id"),
-  gatewayValId: text("gateway_val_id"),
-  bankTranId: text("bank_tran_id"),
-  cardInfo: text("card_info"),
-  riskLevel: integer("risk_level").notNull().default(0),
-  storeAmount: text("store_amount"),
-  refundStatus: text("refund_status").notNull().default("none"),
-  refundRefId: text("refund_ref_id"),
-  refundAmount: integer("refund_amount"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const orders = pgTable(
+  "orders",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id),
+    customerName: text("customer_name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull(),
+    address: text("address").notNull(),
+    city: text("city").notNull(),
+    notes: text("notes"),
+    paymentMethod: text("payment_method").notNull(),
+    subtotal: integer("subtotal").notNull(),
+    discount: integer("discount").notNull().default(0),
+    couponCode: text("coupon_code"),
+    shipping: integer("shipping").notNull(),
+    total: integer("total").notNull(),
+    status: text("status").notNull().default("confirmed"),
+    paymentStatus: text("payment_status").notNull().default("pending"),
+    transactionId: text("transaction_id"),
+    gatewayValId: text("gateway_val_id"),
+    bankTranId: text("bank_tran_id"),
+    cardInfo: text("card_info"),
+    riskLevel: integer("risk_level").notNull().default(0),
+    storeAmount: text("store_amount"),
+    refundStatus: text("refund_status").notNull().default("none"),
+    refundRefId: text("refund_ref_id"),
+    refundAmount: integer("refund_amount"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("orders_user_id_idx").on(t.userId),
+    index("orders_status_idx").on(t.status),
+  ]
+);
 
 export const orderItems = pgTable("order_items", {
   id: serial("id").primaryKey(),
@@ -87,6 +96,8 @@ export const orderItems = pgTable("order_items", {
     .notNull()
     .references(() => orders.id),
   productId: integer("product_id").notNull(),
+  variantId: integer("variant_id").references(() => productVariants.id),
+  sku: text("sku"),
   name: text("name").notNull(),
   image: text("image").notNull(),
   price: integer("price").notNull(),
@@ -172,6 +183,37 @@ export const wishlistItems = pgTable("wishlist_items", {
 
 export type Coupon = typeof coupons.$inferSelect;
 export type ShippingZone = typeof shippingZones.$inferSelect;
+
+export const productVariants = pgTable(
+  "product_variants",
+  {
+    id: serial("id").primaryKey(),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    sku: text("sku").notNull().unique(),
+    color: text("color").notNull().default(""),
+    size: text("size").notNull().default(""),
+    price: integer("price").notNull(),
+    compareAtPrice: integer("compare_at_price"),
+    stock: integer("stock").notNull().default(0),
+    image: text("image").notNull().default(""),
+    barcode: text("barcode").notNull().default(""),
+    weightGrams: integer("weight_grams"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("product_variants_product_id_idx").on(t.productId),
+    uniqueIndex("product_variants_product_combo_idx").on(
+      t.productId,
+      t.color,
+      t.size
+    ),
+  ]
+);
+
+export type ProductVariant = typeof productVariants.$inferSelect;
 
 export const returnRequests = pgTable("return_requests", {
   id: serial("id").primaryKey(),

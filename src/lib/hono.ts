@@ -17,6 +17,7 @@ import type { AdminCouponsRoute } from "@/server/api/admin/coupons";
 import type { AdminOrdersRoute } from "@/server/api/admin/orders";
 import type { AdminProductsRoute } from "@/server/api/admin/products";
 import type { AdminReturnsRoute } from "@/server/api/admin/returns";
+import type { AdminVariantsRoute } from "@/server/api/admin/variants";
 import type { AdminReviewsRoute } from "@/server/api/admin/reviews";
 import type { AdminZonesRoute } from "@/server/api/admin/zones";
 
@@ -43,3 +44,4 @@ export const adminReviewsClient = hc<AdminReviewsRoute>("/api/admin/reviews");
 export const adminCouponsClient = hc<AdminCouponsRoute>("/api/admin/coupons");
 export const adminZonesClient = hc<AdminZonesRoute>("/api/admin/zones");
 export const adminReturnsClient = hc<AdminReturnsRoute>("/api/admin/returns");
+export const adminVariantsClient = hc<AdminVariantsRoute>("/api/admin/variants");

@@ -50,6 +50,13 @@
       "when": 1789023481196,
       "tag": "0006_green_colonel_america",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789033486590,
+      "tag": "0007_melted_quicksilver",
+      "breakpoints": true
     }
   ]
 }
