@@ -52,6 +52,17 @@ export default function Footer() {
         </div>
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-cream/10 pt-6 text-xs text-cream/40 sm:flex-row">
           <p>© {new Date().getFullYear()} DeshiCart. Crafted with pride in Bangladesh 🇧🇩</p>
+          <p>
+            Developed by{" "}
+            <a
+              href="http://fb.me/mdrashedulislam11"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-cream/70 transition-colors hover:text-gold"
+            >
+              MD RASHEDUL ISLAM
+            </a>
+          </p>
           <p>bKash · Nagad · Cards · Cash on Delivery</p>
         </div>
       </div>
