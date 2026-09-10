@@ -5,6 +5,7 @@ import Stars from "./Stars";
 import QuickAddButton from "./QuickAddButton";
 
 export default function ProductCard({ product }: { product: Product }) {
+  const soldOut = product.stock <= 0;
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.price
       ? Math.round(
@@ -37,6 +38,11 @@ export default function ProductCard({ product }: { product: Product }) {
             />
           )}
           <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+            {soldOut && (
+              <span className="rounded-full bg-ink px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white">
+                Sold out
+              </span>
+            )}
             {product.badge && (
               <span
                 className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white ${
@@ -59,9 +65,11 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </Link>
 
-      <div className="absolute right-3 top-3 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-        <QuickAddButton product={product} />
-      </div>
+      {!soldOut && (
+        <div className="absolute right-3 top-3 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <QuickAddButton product={product} />
+        </div>
+      )}
 
       <div className="mt-3 px-0.5">
         <div className="flex items-center gap-1.5">

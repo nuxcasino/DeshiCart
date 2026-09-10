@@ -12,7 +12,11 @@ export default function PurchasePanel({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
+  const soldOut = product.stock <= 0;
+  const maxQuantity = Math.max(1, Math.min(10, product.stock));
+
   const handleAdd = () => {
+    if (soldOut) return;
     addItem(
       {
         productId: product.id,
@@ -87,15 +91,17 @@ export default function PurchasePanel({ product }: { product: Product }) {
         <div className="flex items-center rounded-full border border-sand bg-white">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="px-4 py-3 text-ink-soft transition-colors hover:text-clay"
+            disabled={soldOut}
+            className="px-4 py-3 text-ink-soft transition-colors hover:text-clay disabled:opacity-40"
             aria-label="Decrease quantity"
           >
             −
           </button>
           <span className="w-8 text-center text-sm font-bold">{quantity}</span>
           <button
-            onClick={() => setQuantity((q) => Math.min(10, q + 1))}
-            className="px-4 py-3 text-ink-soft transition-colors hover:text-clay"
+            onClick={() => setQuantity((q) => Math.min(maxQuantity, q + 1))}
+            disabled={soldOut}
+            className="px-4 py-3 text-ink-soft transition-colors hover:text-clay disabled:opacity-40"
             aria-label="Increase quantity"
           >
             +
@@ -103,22 +109,27 @@ export default function PurchasePanel({ product }: { product: Product }) {
         </div>
         <button
           onClick={handleAdd}
-          className={`flex-1 rounded-full py-3.5 text-sm font-bold text-cream transition-all ${
+          disabled={soldOut}
+          className={`flex-1 rounded-full py-3.5 text-sm font-bold text-cream transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
             added
               ? "bg-leaf"
               : "bg-ink hover:bg-clay hover:shadow-[0_8px_24px_rgba(179,84,30,0.35)]"
           }`}
         >
-          {added
-            ? "✓ Added to Bag"
-            : `Add to Bag · ${formatBDT(product.price * quantity)}`}
+          {soldOut
+            ? "Out of Stock"
+            : added
+              ? "✓ Added to Bag"
+              : `Add to Bag · ${formatBDT(product.price * quantity)}`}
         </button>
       </div>
 
-      <p className={`text-xs font-semibold ${lowStock ? "text-clay" : "text-leaf"}`}>
-        {lowStock
-          ? `🔥 Only ${product.stock} left in stock — order soon`
-          : "✓ In stock and ready to ship"}
+      <p className={`text-xs font-semibold ${soldOut || lowStock ? "text-clay" : "text-leaf"}`}>
+        {soldOut
+          ? "Out of stock — check back soon"
+          : lowStock
+            ? `🔥 Only ${product.stock} left in stock — order soon`
+            : "✓ In stock and ready to ship"}
       </p>
 
       <div className="grid grid-cols-3 gap-3 border-t border-sand pt-5 text-center">

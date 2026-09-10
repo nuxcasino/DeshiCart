@@ -54,6 +54,7 @@ export default function CheckoutPage() {
   });
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const shipping = shippingFor(subtotal);
   const total = subtotal + shipping;
@@ -66,6 +67,7 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (items.length === 0) return;
     setStatus("sending");
+    setErrorMessage(null);
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
@@ -80,7 +82,28 @@ export default function CheckoutPage() {
           })),
         }),
       });
-      if (!res.ok) throw new Error("failed");
+      if (!res.ok) {
+        let message = "Something went wrong placing your order. Please try again.";
+        try {
+          const body = await res.json();
+          if (Array.isArray(body?.items) && body.items.length > 0) {
+            message =
+              "Some items don't have enough stock: " +
+              body.items
+                .map(
+                  (i: { name: string; available: number }) =>
+                    `${i.name} (only ${i.available} left)`
+                )
+                .join(", ");
+          } else if (typeof body?.error === "string") {
+            message = body.error;
+          }
+        } catch {
+          // fall back to the generic message
+        }
+        setErrorMessage(message);
+        throw new Error("failed");
+      }
       const { orderId } = await res.json();
       clearCart();
       router.push(`/order/${orderId}`);
@@ -308,7 +331,8 @@ export default function CheckoutPage() {
             </div>
             {status === "error" && (
               <p className="mt-4 text-sm font-semibold text-clay">
-                Something went wrong placing your order. Please try again.
+                {errorMessage ??
+                  "Something went wrong placing your order. Please try again."}
               </p>
             )}
             <button

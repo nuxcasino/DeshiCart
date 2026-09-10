@@ -55,10 +55,14 @@ client-side totals are ignored. Quantities are clamped to 1–10 per line.
 - **Errors:**
   - `400 { "error": "Missing required fields" }` — required field absent/blank
   - `400 { "error": "No valid items" }` — none of the `productId`s exist
+  - `409 { "error": "Some items don't have enough stock", "items": [{ "productId", "name", "available" }] }` — requested quantity exceeds stock; nothing is reserved or created
+  - `409 { "error": "Some items just sold out", "items": [...] }` — lost a checkout race; any partial reservation is restored
+  - `500 { "error": "Could not place order. Please try again." }` — order insert failed after reservation; reserved stock is released
   - `400 { "error": "Invalid request" }` — malformed JSON / unexpected failure
-- **Side effects:** inserts one `orders` row and one `order_items` row per line
-  (snapshotting `name`, `image`, `price` at purchase time). Shipping is
-  `৳80`, free when subtotal ≥ `৳3,000` (`shippingFor()` in `src/lib/format.ts`).
+- **Side effects:** conditionally decrements `products.stock` per line
+  (`stock >= quantity`, so concurrent checkouts can't oversell), then inserts one
+  `orders` row and one `order_items` row per line (snapshotting `name`, `image`,
+  `price` at purchase time). Shipping is `৳80`, free when subtotal ≥ `৳3,000`.
 - Source: `src/app/api/orders/route.ts`
 
 ---

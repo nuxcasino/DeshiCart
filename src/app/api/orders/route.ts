@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
-import { inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { shippingFor } from "@/lib/format";
 
 type IncomingItem = {
@@ -56,30 +56,99 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No valid items" }, { status: 400 });
     }
 
+    // Friendly pre-check against the freshly-read stock snapshot.
+    // The conditional UPDATE below is the real guard against checkout races.
+    const insufficient = lineItems
+      .map((li) => ({
+        productId: li.productId,
+        name: li.name,
+        available: byId.get(li.productId)?.stock ?? 0,
+        requested: li.quantity,
+      }))
+      .filter((x) => x.requested > x.available);
+    if (insufficient.length > 0) {
+      return NextResponse.json(
+        {
+          error: "Some items don't have enough stock",
+          items: insufficient.map(({ productId, name, available }) => ({
+            productId,
+            name,
+            available,
+          })),
+        },
+        { status: 409 }
+      );
+    }
+
     const subtotal = lineItems.reduce((a, i) => a + i.price * i.quantity, 0);
     const shipping = shippingFor(subtotal);
 
-    const [order] = await db
-      .insert(orders)
-      .values({
-        customerName,
-        email,
-        phone,
-        address,
-        city,
-        notes,
-        paymentMethod,
-        subtotal,
-        shipping,
-        total: subtotal + shipping,
-      })
-      .returning();
+    // Reserve stock before creating the order. Each decrement is conditional
+    // (stock >= quantity) so concurrent checkouts can't oversell. The Neon
+    // HTTP driver has no interactive transactions, so on a lost race we
+    // compensate by restoring the rows already reserved.
+    const reserved: typeof lineItems = [];
+    for (const li of lineItems) {
+      const updated = await db
+        .update(products)
+        .set({ stock: sql`${products.stock} - ${li.quantity}` })
+        .where(
+          and(eq(products.id, li.productId), gte(products.stock, li.quantity))
+        )
+        .returning({ id: products.id });
+      if (updated.length === 0) {
+        for (const done of reserved) {
+          await db
+            .update(products)
+            .set({ stock: sql`${products.stock} + ${done.quantity}` })
+            .where(eq(products.id, done.productId));
+        }
+        return NextResponse.json(
+          {
+            error: "Some items just sold out",
+            items: [{ productId: li.productId, name: li.name, available: 0 }],
+          },
+          { status: 409 }
+        );
+      }
+      reserved.push(li);
+    }
 
-    await db
-      .insert(orderItems)
-      .values(lineItems.map((li) => ({ ...li, orderId: order.id })));
+    try {
+      const [order] = await db
+        .insert(orders)
+        .values({
+          customerName,
+          email,
+          phone,
+          address,
+          city,
+          notes,
+          paymentMethod,
+          subtotal,
+          shipping,
+          total: subtotal + shipping,
+        })
+        .returning();
 
-    return NextResponse.json({ orderId: order.id }, { status: 201 });
+      await db
+        .insert(orderItems)
+        .values(lineItems.map((li) => ({ ...li, orderId: order.id })));
+
+      return NextResponse.json({ orderId: order.id }, { status: 201 });
+    } catch {
+      // Order insert failed after reservation — release the reserved stock.
+      for (const done of reserved) {
+        await db
+          .update(products)
+          .set({ stock: sql`${products.stock} + ${done.quantity}` })
+          .where(eq(products.id, done.productId));
+      }
+      return NextResponse.json(
+        { error: "Could not place order. Please try again." },
+        { status: 500 }
+      );
+    }
   } catch {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
