@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/hono";
 import { useLang } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -21,12 +22,14 @@ export default function LogoutButton() {
   };
 
   return (
-    <button
+    <Button
+      variant="secondary"
+      size="sm"
       onClick={logout}
       disabled={sending}
-      className="rounded-full border border-sand bg-white px-6 py-2.5 text-sm font-bold text-ink-soft transition-colors hover:border-clay hover:text-clay disabled:opacity-60"
+      className="rounded-full px-6 py-2.5"
     >
       {sending ? t("account.loggingOut") : t("account.logout")}
-    </button>
+    </Button>
   );
 }

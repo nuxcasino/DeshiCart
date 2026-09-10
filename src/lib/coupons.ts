@@ -6,7 +6,7 @@ export type CouponCheck =
   | { ok: true; coupon: Coupon; discount: number }
   | { ok: false; error: string };
 
-function calcDiscount(coupon: Coupon, subtotal: number): number {
+export function calcDiscount(coupon: Coupon, subtotal: number): number {
   const raw =
     coupon.type === "percent"
       ? Math.floor((subtotal * coupon.value) / 100)

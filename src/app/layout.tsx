@@ -4,14 +4,9 @@ import { headers } from "next/headers";
 import { Fraunces, Manrope } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/lib/cart-context";
-import { LangProvider } from "@/lib/i18n";
 import { isLocale, type Locale } from "@/lib/locale";
 import { localeAlternates } from "@/lib/seo";
 import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/structured-data";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import CartDrawer from "@/components/CartDrawer";
-import ChatButton from "@/components/ChatButton";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -55,6 +50,9 @@ export const metadata: Metadata = {
   themeColor: "#1b1611",
 };
 
+// Root shell only: fonts, global providers, analytics, structured data.
+// Storefront chrome lives in src/app/[lang]/layout.tsx,
+// backoffice chrome in src/app/admin/layout.tsx — never mixed.
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const headerLocale = (await headers()).get("x-locale");
   const lang: Locale = isLocale(headerLocale) ? headerLocale : "bn";
@@ -63,15 +61,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="bg-cream text-ink antialiased">
         <JsonLd data={organizationJsonLd()} />
         <JsonLd data={websiteJsonLd()} />
-        <CartProvider>
-          <LangProvider initialLang={lang}>
-            <Header lang={lang} />
-            <CartDrawer lang={lang} />
-            <main className="min-h-screen">{children}</main>
-            <Footer lang={lang} />
-            <ChatButton />
-          </LangProvider>
-        </CartProvider>
+        <CartProvider>{children}</CartProvider>
         <Analytics />
       </body>
     </html>

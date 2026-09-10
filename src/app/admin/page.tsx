@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { orders, products } from "@/db/schema";
 import { and, desc, eq, lte, ne, sql } from "drizzle-orm";
 import { formatBDT } from "@/lib/format";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 export const dynamic = "force-dynamic";
 
@@ -45,19 +47,17 @@ export default async function AdminDashboard() {
     <div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map(([label, value, href]) => (
-          <Link
-            key={label}
-            href={href}
-            className="rounded-xl border border-sand bg-white p-5 transition-shadow hover:shadow-md"
-          >
-            <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">{label}</p>
-            <p className="mt-2 font-display text-3xl font-semibold">{value}</p>
+          <Link key={label} href={href}>
+            <Card className="p-5 transition-shadow hover:shadow-md">
+              <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">{label}</p>
+              <p className="mt-2 font-display text-3xl font-semibold">{value}</p>
+            </Card>
           </Link>
         ))}
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-sand bg-white p-5">
+        <Card className="p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">Low stock (≤ 10)</h2>
             <Link href="/admin/products" className="text-xs font-bold text-clay hover:underline">
@@ -73,16 +73,16 @@ export default async function AdminDashboard() {
                   <Link href={`/admin/products/${p.id}`} className="font-semibold hover:text-clay">
                     {p.name}
                   </Link>
-                  <span className={`font-bold ${p.stock <= 0 ? "text-clay" : "text-ink-soft"}`}>
+                  <Badge variant={p.stock <= 0 ? "danger" : "warning"}>
                     {p.stock <= 0 ? "Out of stock" : `${p.stock} left`}
-                  </span>
+                  </Badge>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Card>
 
-        <section className="rounded-xl border border-sand bg-white p-5">
+        <Card className="p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">Latest orders</h2>
             <Link href="/admin/orders" className="text-xs font-bold text-clay hover:underline">
@@ -105,7 +105,7 @@ export default async function AdminDashboard() {
               ))}
             </ul>
           )}
-        </section>
+        </Card>
       </div>
     </div>
   );
