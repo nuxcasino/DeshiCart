@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { addresses, orders } from "@/db/schema";
+import { addresses, orders, returnRequests } from "@/db/schema";
 import { asc, desc, eq } from "drizzle-orm";
 import { getSessionUser, toSafeUser } from "@/lib/auth";
 import { formatBDT } from "@/lib/format";
 import AddressManager from "@/components/AddressManager";
 import LogoutButton from "@/components/LogoutButton";
+import ReturnRequestButton from "@/components/ReturnRequestButton";
 import { users } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,14 @@ export default async function AccountPage() {
   const [user] = await db.select().from(users).where(eq(users.id, session.id));
   if (!user) redirect("/login");
 
-  const [myOrders, myAddresses] = await Promise.all([
+  const [myOrders, myAddresses, myReturns] = await Promise.all([
     db.select().from(orders).where(eq(orders.userId, user.id)).orderBy(desc(orders.id)),
     db.select().from(addresses).where(eq(addresses.userId, user.id)).orderBy(asc(addresses.id)),
+    db.select().from(returnRequests).where(eq(returnRequests.userId, user.id)).orderBy(desc(returnRequests.id)),
   ]);
+  const openReturnOrderIds = new Set(
+    myReturns.filter((r) => r.status === "requested" || r.status === "approved").map((r) => r.orderId)
+  );
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
@@ -61,16 +66,16 @@ export default async function AccountPage() {
         ) : (
           <ul className="mt-4 divide-y divide-sand overflow-hidden rounded-xl border border-sand bg-white">
             {myOrders.map((o) => (
-              <li key={o.id}>
-                <Link
-                  href={`/order/${o.id}`}
-                  className="flex flex-wrap items-center justify-between gap-2 px-5 py-4 transition-colors hover:bg-sand/40"
-                >
-                  <div>
-                    <p className="text-sm font-bold">
+              <li key={o.id} className="px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Link
+                    href={`/order/${o.id}`}
+                    className="transition-colors hover:text-clay"
+                  >
+                    <span className="text-sm font-bold">
                       Order #DC-{String(o.id).padStart(5, "0")}
-                    </p>
-                    <p className="mt-0.5 text-xs text-ink-soft">
+                    </span>
+                    <span className="mt-0.5 block text-xs text-ink-soft">
                       {new Date(o.createdAt).toLocaleDateString("en-GB", {
                         day: "numeric",
                         month: "short",
@@ -78,17 +83,49 @@ export default async function AccountPage() {
                       })}{" "}
                       · {o.status}
                       {o.paymentStatus === "paid" ? " · Paid" : ""}
-                    </p>
-                  </div>
+                      {o.refundStatus !== "none" ? ` · Refund ${o.refundStatus}` : ""}
+                    </span>
+                  </Link>
                   <span className="font-display text-lg font-semibold">
                     {formatBDT(o.total)}
                   </span>
-                </Link>
+                </div>
+                {o.status === "delivered" && (
+                  <div className="mt-2">
+                    <ReturnRequestButton
+                      orderId={o.id}
+                      hasOpenRequest={openReturnOrderIds.has(o.id)}
+                    />
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {myReturns.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-display text-2xl font-semibold tracking-tight">
+            Return requests
+          </h2>
+          <ul className="mt-4 divide-y divide-sand overflow-hidden rounded-xl border border-sand bg-white">
+            {myReturns.map((r) => (
+              <li key={r.id} className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-sm">
+                <div>
+                  <p className="font-bold">
+                    Order #DC-{String(r.orderId).padStart(5, "0")}
+                  </p>
+                  <p className="mt-0.5 text-xs text-ink-soft">{r.reason}</p>
+                </div>
+                <span className="text-xs font-bold uppercase tracking-wide text-ink-soft">
+                  {r.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="font-display text-2xl font-semibold tracking-tight">

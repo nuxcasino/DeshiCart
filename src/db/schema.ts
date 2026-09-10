@@ -75,6 +75,9 @@ export const orders = pgTable("orders", {
   cardInfo: text("card_info"),
   riskLevel: integer("risk_level").notNull().default(0),
   storeAmount: text("store_amount"),
+  refundStatus: text("refund_status").notNull().default("none"),
+  refundRefId: text("refund_ref_id"),
+  refundAmount: integer("refund_amount"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -169,3 +172,16 @@ export const wishlistItems = pgTable("wishlist_items", {
 
 export type Coupon = typeof coupons.$inferSelect;
 export type ShippingZone = typeof shippingZones.$inferSelect;
+
+export const returnRequests = pgTable("return_requests", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id")
+    .notNull()
+    .references(() => orders.id),
+  userId: integer("user_id").references(() => users.id),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("requested"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type ReturnRequest = typeof returnRequests.$inferSelect;

@@ -139,8 +139,7 @@ export async function notifyPaymentReceived(order: Order): Promise<void> {
   });
 }
 
-/** Fulfilment status changed from the admin panel. */
-export async function notifyStatusChange(
+/** Fulfilment status changed from the admin panel. */export async function notifyStatusChange(
   order: Order,
   from: string,
   to: string
@@ -161,6 +160,45 @@ export async function notifyStatusChange(
         order.email,
         `DeshiCart order ${code} update: ${to}`,
         `<h2>Order ${code} update</h2><p>Hi ${order.customerName}, your order ${verb}</p>`
+      ),
+    ]);
+  });
+}
+
+/** Customer filed a return request. */
+export async function notifyReturnRequested(order: Order): Promise<void> {
+  const code = orderCode(order.id);
+  await safeNotify("return-requested", async () => {
+    await Promise.all([
+      sendSms(order.phone, `DeshiCart: Return request received for order ${code}. We'll review it shortly.`),
+      sendEmail(
+        order.email,
+        `DeshiCart return request received — ${code}`,
+        `<h2>Return request received</h2><p>Hi ${order.customerName}, we got your return request for order ${code} and will review it within 24 hours.</p>`
+      ),
+    ]);
+  });
+}
+
+/** Return approved / rejected / refunded. */
+export async function notifyReturnUpdate(
+  order: Order,
+  state: "approved" | "rejected" | "refunded"
+): Promise<void> {
+  const code = orderCode(order.id);
+  const text =
+    state === "approved"
+      ? "has been approved. Our courier partner will contact you for pickup."
+      : state === "refunded"
+        ? "has been refunded. The amount should reach your account within 5-7 working days."
+        : "could not be approved. Reply to this email or contact support for help.";
+  await safeNotify("return-update", async () => {
+    await Promise.all([
+      sendSms(order.phone, `DeshiCart: Return for order ${code} ${text}`),
+      sendEmail(
+        order.email,
+        `DeshiCart return ${state} — ${code}`,
+        `<h2>Return ${state}</h2><p>Hi ${order.customerName}, your return for order ${code} ${text}</p>`
       ),
     ]);
   });

@@ -222,6 +222,30 @@ to `/login` when anonymous).
 
 ---
 
+## Returns & refunds
+
+Delivered-order owners file requests from `/account`; admins handle them at
+`/admin/returns`. Online-paid orders refund via the gateway (needs the stored
+`bank_tran_id`); COD refunds are marked for offline cash handling.
+
+- **`GET /api/returns`** — own requests, newest first (401 when logged out).
+- **`POST /api/returns`** — `{ orderId, reason }` → `201 { request }`.
+  `404` for others' orders, `400` unless delivered, `409` when one is already open.
+- **`POST /api/admin/returns/[id]`** — `{ action: "approve" | "reject" | "check" }`
+  (403 without admin):
+  - `approve` → gateway refund initiated (`processing`, request `approved`) or
+    instant `refunded` for COD; customer notified in both cases.
+  - `reject` → request `rejected` + customer notified.
+  - `check` → polls refund status; `refunded` flips order to
+    `paymentStatus: refunded` + request `refunded` + customer notified.
+- Order rows track `refund_status` (`none|processing|refunded|cancelled`),
+  `refund_ref_id`, `refund_amount`; requests track
+  `requested|approved|rejected|refunded`.
+- Sources: `src/lib/refunds.ts`, `src/app/api/returns/route.ts`,
+  `src/app/api/admin/returns/[id]/route.ts`.
+
+---
+
 ## Admin (`/admin`, all endpoints 403 without `is_admin`)
 
 Bootstrap the first admin: sign up normally, then flip `is_admin` to `true` for
