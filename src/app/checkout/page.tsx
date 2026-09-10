@@ -59,6 +59,7 @@ function CheckoutForm() {
     phone: "",
     address: "",
     city: "Dhaka",
+    postcode: "",
     notes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState("cod");
@@ -265,6 +266,18 @@ function CheckoutForm() {
                 </select>
               </label>
               <label className="block">
+                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
+                  Postcode
+                </span>
+                <input
+                  value={form.postcode}
+                  onChange={set("postcode")}
+                  placeholder="1200"
+                  inputMode="numeric"
+                  className="w-full rounded-lg border border-sand px-4 py-3 text-sm outline-none transition-colors focus:border-clay"
+                />
+              </label>
+              <label className="block sm:col-span-2">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
                   Delivery notes
                 </span>

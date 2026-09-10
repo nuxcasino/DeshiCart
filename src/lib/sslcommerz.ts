@@ -42,6 +42,7 @@ export type InitPaymentInput = {
   phone: string;
   address: string;
   city: string;
+  postcode: string;
   siteUrl: string;
   productNames: string;
 };
@@ -65,8 +66,16 @@ export async function initSslcommerzPayment(
     cus_email: input.email,
     cus_add1: input.address,
     cus_city: input.city,
+    cus_postcode: input.postcode,
     cus_country: "Bangladesh",
     cus_phone: input.phone,
+    // Shipping receiver info is mandatory for the init API — for a
+    // storefront order the receiver is the customer themselves.
+    ship_name: input.customerName,
+    ship_add1: input.address,
+    ship_city: input.city,
+    ship_postcode: input.postcode,
+    ship_country: "Bangladesh",
     shipping_method: "Courier",
     product_name: input.productNames.slice(0, 255) || "DeshiCart order",
     product_category: "Clothing",

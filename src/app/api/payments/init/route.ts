@@ -26,6 +26,9 @@ export async function POST(request: Request) {
     const address = String(data.address ?? "").trim();
     const city = String(data.city ?? "").trim();
     const notes = String(data.notes ?? "").trim() || null;
+    // Postcode isn't stored on the order — it only satisfies the gateway's
+    // mandatory cus_postcode / ship_postcode fields.
+    const postcode = String(data.postcode ?? "").trim() || "1200";
 
     if (!items.length || !customerName || !phone || !address || !city || !email) {
       return NextResponse.json(
@@ -131,6 +134,7 @@ export async function POST(request: Request) {
         phone,
         address,
         city,
+        postcode,
         siteUrl,
         productNames: lineItems.map((li) => li.name).join(", "),
       });
