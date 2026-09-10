@@ -4,6 +4,11 @@ Base URL is same-origin (the app calls these via relative `/api/*` paths).
 Storefront endpoints are public; auth/account/address endpoints use the session
 cookie. All request/response bodies are JSON.
 
+Abuse-prone endpoints are rate-limited per IP (in-memory sliding window):
+orders and payment-init 10/min, signup/login 10/min, reviews 5/min.
+Exceeding the limit returns `429 { "error": "Too many requests…" }`.
+Checkout inputs are length-capped and emails validated server-side.
+
 ---
 
 ## `GET /api/health`

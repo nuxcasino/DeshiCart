@@ -6,11 +6,20 @@ import {
   createSession,
   hashPassword,
   isValidEmail,
+  purgeExpiredSessions,
   sessionCookieHeader,
   toSafeUser,
 } from "@/lib/auth";
+import {
+  clientIp,
+  isRateLimited,
+  rateLimitedResponse,
+} from "@/lib/ratelimit";
 
 export async function POST(request: Request) {
+  if (isRateLimited(`signup:${clientIp(request)}`, 10, 60_000)) {
+    return rateLimitedResponse();
+  }
   try {
     const data = await request.json();
     const name = String(data.name ?? "").trim().slice(0, 80);
@@ -47,6 +56,7 @@ export async function POST(request: Request) {
       .values({ name, email, phone, passwordHash: await hashPassword(password) })
       .returning();
     const token = await createSession(user.id);
+    await purgeExpiredSessions();
 
     const res = NextResponse.json({ user: toSafeUser(user) }, { status: 201 });
     res.headers.set("Set-Cookie", sessionCookieHeader(token));

@@ -59,7 +59,10 @@ the Next.js app and `next build`.
    until checkout.
 4. **Checkout.** `/checkout` (client component) collects contact + address + payment
    choice and `POST`s to `/api/orders`. Prices are **re-computed server-side** from
-   the database — client-submitted prices are ignored.
+   the database — client-submitted prices are ignored. Stock is reserved with
+   atomic conditional decrements; the Neon HTTP driver has no interactive
+   transactions, so multi-step writes use validate → reserve → insert with
+   compensation (release) on failure instead.
 5. **Confirmation.** The API returns `{ orderId }`; the client clears the cart and
    navigates to `/order/[id]`, a server component that reads the order + items.
 6. **Reviews.** `ReviewForm` `POST`s to `/api/reviews`, which inserts the review and

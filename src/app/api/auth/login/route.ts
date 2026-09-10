@@ -4,12 +4,21 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import {
   createSession,
+  purgeExpiredSessions,
   sessionCookieHeader,
   toSafeUser,
   verifyPassword,
 } from "@/lib/auth";
+import {
+  clientIp,
+  isRateLimited,
+  rateLimitedResponse,
+} from "@/lib/ratelimit";
 
 export async function POST(request: Request) {
+  if (isRateLimited(`login:${clientIp(request)}`, 10, 60_000)) {
+    return rateLimitedResponse();
+  }
   try {
     const data = await request.json();
     const email = String(data.email ?? "").trim().toLowerCase();
@@ -31,6 +40,7 @@ export async function POST(request: Request) {
     }
 
     const token = await createSession(user.id);
+    await purgeExpiredSessions();
     const res = NextResponse.json({ user: toSafeUser(user) });
     res.headers.set("Set-Cookie", sessionCookieHeader(token));
     return res;

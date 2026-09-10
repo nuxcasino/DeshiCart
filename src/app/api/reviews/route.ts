@@ -2,8 +2,16 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, reviews } from "@/db/schema";
 import { eq, sql } from "drizzle-orm";
+import {
+  clientIp,
+  isRateLimited,
+  rateLimitedResponse,
+} from "@/lib/ratelimit";
 
 export async function POST(request: Request) {
+  if (isRateLimited(`reviews:${clientIp(request)}`, 5, 60_000)) {
+    return rateLimitedResponse();
+  }
   try {
     const data = await request.json();
     const productId = Number(data.productId);

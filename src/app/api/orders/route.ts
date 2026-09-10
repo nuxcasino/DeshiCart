@@ -3,8 +3,13 @@ import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { shippingFor } from "@/lib/format";
-import { getSessionUserFromRequest } from "@/lib/auth";
+import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
 import { notifyOrderPlaced } from "@/lib/notify";
+import {
+  clientIp,
+  isRateLimited,
+  rateLimitedResponse,
+} from "@/lib/ratelimit";
 
 type IncomingItem = {
   productId: number;
@@ -13,18 +18,30 @@ type IncomingItem = {
 };
 
 export async function POST(request: Request) {
+  if (isRateLimited(`orders:${clientIp(request)}`, 10, 60_000)) {
+    return rateLimitedResponse();
+  }
   try {
     const data = await request.json();
-    const items: IncomingItem[] = Array.isArray(data.items) ? data.items : [];
-    const customerName = String(data.customerName ?? "").trim();
-    const email = String(data.email ?? "").trim();
-    const phone = String(data.phone ?? "").trim();
-    const address = String(data.address ?? "").trim();
-    const city = String(data.city ?? "").trim();
-    const notes = String(data.notes ?? "").trim() || null;
-    const paymentMethod = String(data.paymentMethod ?? "cod");
+    const items: IncomingItem[] = Array.isArray(data.items)
+      ? data.items.slice(0, 50)
+      : [];
+    const customerName = String(data.customerName ?? "").trim().slice(0, 80);
+    const email = String(data.email ?? "").trim().slice(0, 160);
+    const phone = String(data.phone ?? "").trim().slice(0, 20);
+    const address = String(data.address ?? "").trim().slice(0, 200);
+    const city = String(data.city ?? "").trim().slice(0, 60);
+    const notes = String(data.notes ?? "").trim().slice(0, 500) || null;
+    const paymentMethod = String(data.paymentMethod ?? "cod").slice(0, 30);
 
-    if (!items.length || !customerName || !phone || !address || !city || !email) {
+    if (
+      !items.length ||
+      !customerName ||
+      !phone ||
+      !address ||
+      !city ||
+      !isValidEmail(email)
+    ) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -48,7 +65,7 @@ export async function POST(request: Request) {
           name: p.name,
           image: p.images[0] ?? "",
           price: p.price,
-          size: i.size ?? null,
+          size: typeof i.size === "string" ? i.size.slice(0, 20) : null,
           quantity,
         };
       })

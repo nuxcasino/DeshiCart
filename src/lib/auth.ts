@@ -3,7 +3,7 @@ import { promisify } from "node:util";
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { sessions, users, type User } from "@/db/schema";
-import { and, eq, gt } from "drizzle-orm";
+import { and, eq, gt, lt } from "drizzle-orm";
 
 const scrypt = promisify(_scrypt);
 
@@ -94,6 +94,15 @@ export async function getSessionUserFromRequest(
 export async function destroySession(token: string | undefined | null) {
   if (!token) return;
   await db.delete(sessions).where(eq(sessions.tokenHash, hashToken(token)));
+}
+
+/** Removes expired sessions. Called opportunistically on login/signup. */
+export async function purgeExpiredSessions(): Promise<void> {
+  try {
+    await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
+  } catch {
+    // hygiene only — never fail auth over it
+  }
 }
 
 export function sessionCookieHeader(token: string): string {
