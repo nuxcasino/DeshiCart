@@ -24,3 +24,7 @@ build/
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Test artifacts
+test-results/
+playwright-report/
