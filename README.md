@@ -82,8 +82,9 @@ npm run start   # serve the production build locally
 ## Deployment
 
 Push to GitHub, import into Vercel (Next.js preset, defaults), set `DATABASE_URL`,
-apply the schema to the production database once, and deploy. No `vercel.json`
-needed. Step-by-step guide with production checklist and rollback procedure:
+and deploy. The `vercel-build` script syncs the DB schema automatically on every
+deployment; no `vercel.json` needed. Step-by-step guide with production checklist
+and rollback procedure:
 [docs/deployment.md](docs/deployment.md).
 
 ## Troubleshooting

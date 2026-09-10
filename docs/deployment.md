@@ -35,18 +35,27 @@ Details and rotation guidance: [environment.md](environment.md).
 
 - **Provider:** Neon PostgreSQL (any Postgres works; `*.neon.tech` URLs use the
   HTTPS driver, others use a `node-postgres` pool — see `src/db/index.ts`).
-- **Schema:** apply once per database with `npm run db:push` (or `db:migrate`)
-  from your machine pointed at the same `DATABASE_URL`.
+- **Auto-migration on deploy:** the `vercel-build` script in `package.json`
+  (`drizzle-kit push && next build`) syncs `src/db/schema.ts` to the database on
+  every Vercel deployment — no manual step, no `vercel.json` needed (Vercel
+  auto-detects the `vercel-build` script). Local `npm run build` is unaffected.
+  - `push` is idempotent: if the schema is already in sync it is a no-op.
+  - If a schema change is **destructive** (drop column/table, type change with data
+    loss), `push` refuses to run non-interactively and the build fails safely —
+    apply that change manually with `npm run db:push` from your machine, then
+    redeploy.
 - **Seeding:** the app self-seeds on first request (`ensureSeeded()` in
   `src/lib/seed.ts`, idempotent via `onConflictDoNothing`). Safe under concurrent
   cold starts, but adds latency to the first request after a deploy.
-- **Migrations on deploy:** there is no CI migration hook. For schema changes,
-  run `npm run db:generate` locally, commit `./drizzle`, apply to the database,
-  then deploy.
+- **Schema-change workflow:** edit `src/db/schema.ts` → `npm run db:generate`
+  (updates `./drizzle`) → commit → push to `main` → Vercel auto-syncs on deploy.
+  Verify with `GET /api/health` afterwards.
 
 ## 4. Build settings
 
 - `npm run build` → `next build` (Turbopack). TypeScript is checked during build.
+- On Vercel, `npm run vercel-build` runs instead: `drizzle-kit push` (schema sync)
+  followed by `next build`. Both steps need `DATABASE_URL`.
 - `npm run lint` is **not** run by `next build` (Next 16); run it in CI if you
   want lint gates.
 - All DB-backed pages are `export const dynamic = "force-dynamic"`, so the build
