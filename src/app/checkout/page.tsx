@@ -7,25 +7,14 @@ import { Suspense, useEffect, useState } from "react";
 import {
   authClient,
   couponsClient,
+  locationsClient,
   ordersClient,
   paymentsClient,
   shippingClient,
 } from "@/lib/hono";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
-
-const cities = [
-  "Dhaka",
-  "Chattogram",
-  "Sylhet",
-  "Rajshahi",
-  "Khulna",
-  "Barishal",
-  "Rangpur",
-  "Mymensingh",
-  "Cumilla",
-  "Other",
-];
+import type { District, Division, Upazila } from "@/db/schema";
 
 const paymentMethods = [
   {
@@ -66,17 +55,55 @@ function CheckoutForm() {
     email: "",
     phone: "",
     address: "",
-    city: "Dhaka",
+    city: "",
+    divisionId: "",
+    districtId: "",
+    upazilaId: "",
     postcode: "",
     notes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [divisions, setDivisions] = useState<Division[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
+  const [upazilas, setUpazilas] = useState<Upazila[]>([]);
+
+  const loadDistricts = async (divisionId: string) => {
+    try {
+      const r = await locationsClient.divisions[":divisionId"].districts.$get({
+        param: { divisionId },
+      });
+      const d = (await r.json()) as { districts?: District[] };
+      setDistricts(d.districts ?? []);
+    } catch {
+      setDistricts([]);
+    }
+  };
+
+  const loadUpazilas = async (districtId: string) => {
+    try {
+      const r = await locationsClient.districts[":districtId"].upazilas.$get({
+        param: { districtId },
+      });
+      const d = (await r.json()) as { upazilas?: Upazila[] };
+      setUpazilas(d.upazilas ?? []);
+    } catch {
+      setUpazilas([]);
+    }
+  };
 
   // Prefill from the account (if logged in) without clobbering typed input.
+  // Saved city names resolve to division/district/upazila ids for shipping.
   useEffect(() => {
     (async () => {
+      try {
+        const dr = await locationsClient.divisions.$get();
+        const dd = (await dr.json()) as { divisions?: Division[] };
+        setDivisions(dd.divisions ?? []);
+      } catch {
+        // location selects stay disabled; city text still works
+      }
       try {
         const r = await authClient.me.$get();
         const d = (await r.json()) as {
@@ -88,15 +115,45 @@ function CheckoutForm() {
           } | null;
         };
         if (!d?.user) return;
+        const city = d.defaultAddress?.city || "";
         setForm((f) => ({
           ...f,
           customerName: f.customerName || d.user?.name || "",
           email: f.email || d.user?.email || "",
           phone: f.phone || d.user?.phone || "",
           address: f.address || d.defaultAddress?.address || "",
-          city: f.address ? f.city : d.defaultAddress?.city || f.city,
+          city: f.address ? f.city : city,
           postcode: f.postcode || d.defaultAddress?.postcode || "",
         }));
+        if (city) {
+          try {
+            const rr = await locationsClient.resolve.$get({ query: { district: city } });
+            if (rr.ok) {
+              const rd = (await rr.json()) as {
+                division?: Division;
+                district?: District;
+                upazilas?: Upazila[];
+              };
+              if (rd.division && rd.district) {
+                const resolved = await locationsClient.divisions[":divisionId"].districts.$get({
+                  param: { divisionId: rd.division.id },
+                });
+                const rdd = (await resolved.json()) as { districts?: District[] };
+                setDistricts(rdd.districts ?? []);
+                setUpazilas(rd.upazilas ?? []);
+                setForm((f) => ({
+                  ...f,
+                  divisionId: rd.division!.id,
+                  districtId: rd.district!.id,
+                  upazilaId: "",
+                  city: rd.district!.nameEn,
+                }));
+              }
+            }
+          } catch {
+            // city text still submits; shipping falls back to city zones
+          }
+        }
       } catch {
         // not logged in or unreachable — checkout works as guest
       }
@@ -121,13 +178,19 @@ function CheckoutForm() {
 
   const discounted = Math.max(0, subtotal - discount);
 
-  // District-based delivery fee; falls back to the flat rule on error.
+  // Location-aware delivery fee; falls back through city zones to flat rule.
   // (The previous quote stays visible while the new one loads.)
   useEffect(() => {
     (async () => {
       try {
         const r = await shippingClient.quote.$get({
-          query: { city: form.city, subtotal: String(discounted) },
+          query: {
+            city: form.city,
+            divisionId: form.divisionId,
+            districtId: form.districtId,
+            upazilaId: form.upazilaId,
+            subtotal: String(discounted),
+          },
         });
         const d = (await r.json()) as { shipping?: number };
         if (typeof d?.shipping === "number") setZoneShipping(d.shipping);
@@ -135,7 +198,7 @@ function CheckoutForm() {
         // falls back to the flat rule
       }
     })();
-  }, [form.city, discounted]);
+  }, [form.city, form.divisionId, form.districtId, form.upazilaId, discounted]);
 
   const shipping = zoneShipping ?? shippingFor(discounted);
   const total = discounted + shipping;
@@ -358,15 +421,73 @@ function CheckoutForm() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  City / District *
+                  Division *
                 </span>
                 <select
-                  value={form.city}
-                  onChange={set("city")}
+                  required
+                  value={form.divisionId}
+                  onChange={async (e) => {
+                    const divisionId = e.target.value;
+                    setForm((f) => ({
+                      ...f,
+                      divisionId,
+                      districtId: "",
+                      upazilaId: "",
+                      city: "",
+                    }));
+                    setUpazilas([]);
+                    if (divisionId) await loadDistricts(divisionId);
+                    else setDistricts([]);
+                  }}
                   className="w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-clay"
                 >
-                  {cities.map((c) => (
-                    <option key={c}>{c}</option>
+                  <option value="">Select division…</option>
+                  {divisions.map((d) => (
+                    <option key={d.id} value={d.id}>{d.nameEn}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
+                  District *
+                </span>
+                <select
+                  required
+                  value={form.districtId}
+                  disabled={!form.divisionId}
+                  onChange={async (e) => {
+                    const districtId = e.target.value;
+                    const district = districts.find((d) => d.id === districtId);
+                    setForm((f) => ({
+                      ...f,
+                      districtId,
+                      upazilaId: "",
+                      city: district?.nameEn ?? "",
+                    }));
+                    setUpazilas([]);
+                    if (districtId) await loadUpazilas(districtId);
+                  }}
+                  className="w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-clay disabled:opacity-50"
+                >
+                  <option value="">Select district…</option>
+                  {districts.map((d) => (
+                    <option key={d.id} value={d.id}>{d.nameEn}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
+                  Upazila / Thana
+                </span>
+                <select
+                  value={form.upazilaId}
+                  disabled={!form.districtId}
+                  onChange={set("upazilaId")}
+                  className="w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-clay disabled:opacity-50"
+                >
+                  <option value="">Select upazila…</option>
+                  {upazilas.map((u) => (
+                    <option key={u.id} value={u.id}>{u.nameEn}</option>
                   ))}
                 </select>
               </label>

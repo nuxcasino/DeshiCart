@@ -61,10 +61,13 @@ export const orders = pgTable(
     userId: integer("user_id").references(() => users.id),
     customerName: text("customer_name").notNull(),
     email: text("email").notNull(),
-    phone: text("phone").notNull(),
-    address: text("address").notNull(),
-    city: text("city").notNull(),
-    notes: text("notes"),
+  phone: text("phone").notNull(),
+  address: text("address").notNull(),
+  city: text("city").notNull(),
+  divisionId: text("division_id"),
+  districtId: text("district_id"),
+  upazilaId: text("upazila_id"),
+  notes: text("notes"),
     paymentMethod: text("payment_method").notNull(),
     subtotal: integer("subtotal").notNull(),
     discount: integer("discount").notNull().default(0),
@@ -142,6 +145,9 @@ export const addresses = pgTable("addresses", {
   address: text("address").notNull(),
   city: text("city").notNull(),
   postcode: text("postcode").notNull().default(""),
+  divisionId: text("division_id"),
+  districtId: text("district_id"),
+  upazilaId: text("upazila_id"),
   isDefault: boolean("is_default").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -183,6 +189,65 @@ export const wishlistItems = pgTable("wishlist_items", {
 
 export type Coupon = typeof coupons.$inferSelect;
 export type ShippingZone = typeof shippingZones.$inferSelect;
+
+// Bangladesh administrative hierarchy (§15). Stable package IDs are used as
+// primary keys so re-seeds are idempotent and relationships survive.
+export const divisions = pgTable("divisions", {
+  id: text("id").primaryKey(),
+  nameEn: text("name_en").notNull(),
+  nameBn: text("name_bn").notNull(),
+  active: boolean("active").notNull().default(true),
+});
+
+export const districts = pgTable(
+  "districts",
+  {
+    id: text("id").primaryKey(),
+    divisionId: text("division_id")
+      .notNull()
+      .references(() => divisions.id),
+    nameEn: text("name_en").notNull(),
+    nameBn: text("name_bn").notNull(),
+    active: boolean("active").notNull().default(true),
+  },
+  (t) => [index("districts_division_id_idx").on(t.divisionId)]
+);
+
+export const upazilas = pgTable(
+  "upazilas",
+  {
+    id: text("id").primaryKey(),
+    districtId: text("district_id")
+      .notNull()
+      .references(() => districts.id),
+    nameEn: text("name_en").notNull(),
+    nameBn: text("name_bn").notNull(),
+    active: boolean("active").notNull().default(true),
+  },
+  (t) => [index("upazilas_district_id_idx").on(t.districtId)]
+);
+
+// Location shipping rules (§16). Most-specific active rule wins:
+// upazila → district → division → legacy city zone → flat fallback.
+export const shippingRules = pgTable(
+  "shipping_rules",
+  {
+    id: serial("id").primaryKey(),
+    scope: text("scope").notNull(), // "division" | "district" | "upazila"
+    refId: text("ref_id").notNull(),
+    fee: integer("fee").notNull(),
+    freeOver: integer("free_over"),
+    active: boolean("active").notNull().default(true),
+  },
+  (t) => [
+    uniqueIndex("shipping_rules_scope_ref_idx").on(t.scope, t.refId),
+  ]
+);
+
+export type Division = typeof divisions.$inferSelect;
+export type District = typeof districts.$inferSelect;
+export type Upazila = typeof upazilas.$inferSelect;
+export type ShippingRule = typeof shippingRules.$inferSelect;
 
 export const productVariants = pgTable(
   "product_variants",

@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
 import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
 import { applyCoupon, releaseCoupon } from "@/lib/coupons";
-import { shippingForCity } from "@/lib/shipping";
+import { quoteShipping } from "@/lib/locations";
 import {
   releaseLines,
   reserveLines,
@@ -35,6 +35,9 @@ const createOrder = z.object({
   notes: z.string().trim().max(500).default(""),
   paymentMethod: z.string().trim().max(30).default("cod"),
   couponCode: z.string().trim().max(40).default(""),
+  divisionId: z.string().trim().max(20).default(""),
+  districtId: z.string().trim().max(20).default(""),
+  upazilaId: z.string().trim().max(20).default(""),
   items: z.array(item).min(1).max(50),
 });
 
@@ -74,7 +77,13 @@ const app = new Hono().post("/", zValidator("json", createOrder, validationHook)
     }
     discount = applied.discount;
   }
-  const shipping = await shippingForCity(input.city, subtotal - discount);
+  const shipping = await quoteShipping({
+    city: input.city,
+    divisionId: input.divisionId || null,
+    districtId: input.districtId || null,
+    upazilaId: input.upazilaId || null,
+    subtotal: subtotal - discount,
+  });
 
   const sessionUser = await getSessionUserFromRequest(c.req.raw);
 
@@ -97,6 +106,9 @@ const app = new Hono().post("/", zValidator("json", createOrder, validationHook)
         phone: input.phone,
         address: input.address,
         city: input.city,
+        divisionId: input.divisionId || null,
+        districtId: input.districtId || null,
+        upazilaId: input.upazilaId || null,
         notes: input.notes || null,
         paymentMethod: input.paymentMethod,
         subtotal,

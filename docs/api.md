@@ -291,3 +291,26 @@ changes never rewrite history. Storefront cards show "From ৳X" floors.
 - Checkout `items[]` accept `variantId`; `GET /api/products/:slug` includes
   `variants`. Pages: product page selector (price/stock/SKU/image react to
   color+size), `/admin/inventory` for variant stock.
+
+---
+
+## Locations & location shipping
+
+Master data (8 divisions, 64 districts, 495 upazilas with EN+BN names) is seeded
+from the `bangladesh-geo-data` package into `divisions` / `districts` /
+`upazilas` (stable string-id PKs, idempotent re-seed). No runtime third-party
+dependency — checkout reads local tables.
+
+- **`GET /api/locations/divisions`** — all divisions.
+- **`GET /api/locations/divisions/:id/districts`** — districts of a division.
+- **`GET /api/locations/districts/:id/upazilas`** — upazilas of a district.
+- **`GET /api/locations/resolve?district=`** — matches a legacy city name to
+  `{ division, district, upazilas }` (checkout prefill).
+- **`GET /api/shipping/quote?city=&divisionId=&districtId=&upazilaId=&subtotal=`**
+  — resolution order: upazila rule → district rule → division rule → legacy
+  city zone → flat ৳80 (free over ৳3,000 at every level).
+- Orders carry `division_id` / `district_id` / `upazila_id` alongside the city
+  text; checkout sends all four, server re-resolves (never trusts the client fee).
+- **Admin:** `/admin/zones` manages rules (`POST /api/admin/shipping-rules`
+  upserts by scope+ref with ref-existence check, `DELETE …/[id]`) plus the
+  legacy city zones.

@@ -6,7 +6,7 @@ import { orderItems, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
 import { applyCoupon, releaseCoupon } from "@/lib/coupons";
-import { shippingForCity } from "@/lib/shipping";
+import { quoteShipping } from "@/lib/locations";
 import {
   releaseLines,
   reserveLines,
@@ -37,6 +37,9 @@ const initPayment = z.object({
   notes: z.string().trim().max(500).default(""),
   postcode: z.string().trim().max(20).default(""),
   couponCode: z.string().trim().max(40).default(""),
+  divisionId: z.string().trim().max(20).default(""),
+  districtId: z.string().trim().max(20).default(""),
+  upazilaId: z.string().trim().max(20).default(""),
   paymentMethod: z.string().trim().max(30).default("sslcommerz"),
   items: z.array(item).min(1).max(50),
 });
@@ -83,7 +86,13 @@ const app = new Hono()
       }
       discount = applied.discount;
     }
-    const shipping = await shippingForCity(input.city, subtotal - discount);
+    const shipping = await quoteShipping({
+      city: input.city,
+      divisionId: input.divisionId || null,
+      districtId: input.districtId || null,
+      upazilaId: input.upazilaId || null,
+      subtotal: subtotal - discount,
+    });
     const total = subtotal - discount + shipping;
 
     const reserved = await reserveLines(lineItems);
@@ -108,6 +117,9 @@ const app = new Hono()
           phone: input.phone,
           address: input.address,
           city: input.city,
+          divisionId: input.divisionId || null,
+          districtId: input.districtId || null,
+          upazilaId: input.upazilaId || null,
           notes: input.notes || null,
           paymentMethod: "sslcommerz",
           subtotal,

@@ -1,7 +1,8 @@
 import { db } from "@/db";
-import { categories, products, reviews, shippingZones } from "@/db/schema";
+import { categories, districts, divisions, products, reviews, shippingZones, upazilas } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import { seedCategories, seedProducts, seedReviews } from "./seed-data";
+import geoData from "bangladesh-geo-data";
 
 const defaultShippingZones = [
   { city: "Dhaka", fee: 60, freeOver: 3000 },
@@ -31,8 +32,59 @@ export async function ensureShippingZones() {
 
 let seeded = false;
 
+let locationsSeeded = false;
+
+/** Master BD geo data (§15): idempotent, safe to run on existing databases. */
+export async function ensureLocations() {
+  if (locationsSeeded) return;
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(divisions);
+  if (count === 0) {
+    const {
+      getAllDivisions,
+      getAllDistricts,
+      getAllUpazilas,
+    } = geoData as {
+      getAllDivisions: () => Array<{ id: string; name: string; nameBn: string }>;
+      getAllDistricts: () => Array<{ id: string; name: string; nameBn: string; divisionId: string }>;
+      getAllUpazilas: () => Array<{ id: string; name: string; nameBn: string; districtId: string }>;
+    };
+    await db
+      .insert(divisions)
+      .values(
+        getAllDivisions().map((d) => ({ id: d.id, nameEn: d.name, nameBn: d.nameBn }))
+      )
+      .onConflictDoNothing();
+    await db
+      .insert(districts)
+      .values(
+        getAllDistricts().map((d) => ({
+          id: d.id,
+          divisionId: d.divisionId,
+          nameEn: d.name,
+          nameBn: d.nameBn,
+        }))
+      )
+      .onConflictDoNothing();
+    await db
+      .insert(upazilas)
+      .values(
+        getAllUpazilas().map((u) => ({
+          id: u.id,
+          districtId: u.districtId,
+          nameEn: u.name,
+          nameBn: u.nameBn,
+        }))
+      )
+      .onConflictDoNothing();
+  }
+  locationsSeeded = true;
+}
+
 export async function ensureSeeded() {
   await ensureShippingZones();
+  await ensureLocations();
   if (seeded) return;
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })
