@@ -1,0 +1,630 @@
+const px = (id: number, w = 800, h = 1200) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=${h}&w=${w}`;
+
+export const seedCategories = [
+  {
+    name: "T-Shirts",
+    slug: "t-shirts",
+    tagline: "Everyday essentials, elevated",
+    image: px(9558577),
+  },
+  {
+    name: "Shirts",
+    slug: "shirts",
+    tagline: "Sharp looks for every occasion",
+    image: px(15059446),
+  },
+  {
+    name: "Women",
+    slug: "women",
+    tagline: "Trend-forward fits for her",
+    image: px(18632573),
+  },
+  {
+    name: "Accessories",
+    slug: "accessories",
+    tagline: "The details that define you",
+    image: px(5168137),
+  },
+];
+
+type SeedProduct = {
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  details: string[];
+  price: number;
+  compareAtPrice?: number;
+  images: string[];
+  sizes: string[];
+  colors: string[];
+  badge?: string;
+  featured?: boolean;
+  stock?: number;
+};
+
+const apparelSizes = ["S", "M", "L", "XL", "XXL"];
+const oneSize = ["One Size"];
+
+export const seedProducts: SeedProduct[] = [
+  {
+    name: "Noir Essential Tee",
+    slug: "noir-essential-tee",
+    category: "t-shirts",
+    description:
+      "The tee that anchors every wardrobe. Cut from heavyweight 220 GSM combed cotton with a structured crew neck that keeps its shape wash after wash — dressed up under a blazer or solo with denim.",
+    details: [
+      "220 GSM heavyweight combed cotton",
+      "Pre-shrunk, bio-washed for softness",
+      "Ribbed crew neck with reinforced seams",
+      "Made in Bangladesh",
+    ],
+    price: 890,
+    compareAtPrice: 1190,
+    images: [px(9558577), px(16069737), px(9558583)],
+    sizes: apparelSizes,
+    colors: ["Jet Black", "Charcoal"],
+    badge: "Bestseller",
+    featured: true,
+  },
+  {
+    name: "Cloud White Crew Tee",
+    slug: "cloud-white-crew-tee",
+    category: "t-shirts",
+    description:
+      "Crisp, clean and endlessly versatile. Our Cloud White crew is spun from long-staple cotton for a smooth, luminous finish that stays bright through Dhaka summers.",
+    details: [
+      "180 GSM long-staple cotton jersey",
+      "Anti-yellowing bright white finish",
+      "Side-seamed for a tailored drape",
+      "Machine washable",
+    ],
+    price: 850,
+    images: [px(8217461), px(28446958), px(36700228)],
+    sizes: apparelSizes,
+    colors: ["Pure White", "Off White"],
+    featured: true,
+  },
+  {
+    name: "Urban Graphite Tee",
+    slug: "urban-graphite-tee",
+    category: "t-shirts",
+    description:
+      "A washed graphite tone with a relaxed street silhouette. Garment-dyed for that lived-in look from day one — pair it with cargos and clean sneakers.",
+    details: [
+      "Garment-dyed 200 GSM cotton",
+      "Relaxed streetwear fit",
+      "Drop-shoulder construction",
+      "Fade-resistant dye process",
+    ],
+    price: 990,
+    images: [px(3760610), px(16069737)],
+    sizes: apparelSizes,
+    colors: ["Graphite", "Stone Grey"],
+  },
+  {
+    name: "Off-Duty Oversized Tee",
+    slug: "off-duty-oversized-tee",
+    category: "t-shirts",
+    description:
+      "Boxy, breezy and built for weekends. The Off-Duty oversized tee drapes effortlessly with a dropped shoulder and extended hem — the uniform of doing absolutely nothing, stylishly.",
+    details: [
+      "Oversized boxy silhouette",
+      "Soft-touch 190 GSM cotton",
+      "Extended curved hem",
+      "Unisex fit — size down for regular fit",
+    ],
+    price: 1090,
+    compareAtPrice: 1350,
+    images: [px(6668809), px(36700228), px(28446958)],
+    sizes: apparelSizes,
+    colors: ["Cloud White", "Sand"],
+    badge: "New",
+  },
+  {
+    name: "Dhaka Bloom Resort Shirt",
+    slug: "dhaka-bloom-resort-shirt",
+    category: "shirts",
+    description:
+      "Vacation energy, city approved. An airy resort shirt in an exclusive floral print inspired by the krishnachura blossoms of old Dhaka. Camp collar, relaxed drape, instant charisma.",
+    details: [
+      "Breathable viscose-blend fabric",
+      "Exclusive krishnachura floral print",
+      "Camp collar, straight hem",
+      "Wear open over a tee or buttoned up",
+    ],
+    price: 1690,
+    compareAtPrice: 2100,
+    images: [px(2421356), px(15870230)],
+    sizes: apparelSizes,
+    colors: ["Krishnachura", "Midnight Bloom"],
+    badge: "Limited",
+    featured: true,
+  },
+  {
+    name: "Cocoa Linen Shirt",
+    slug: "cocoa-linen-shirt",
+    category: "shirts",
+    description:
+      "Rich cocoa linen with a soft matte texture that only gets better with wear. Cut with a modern spread collar and a slightly tapered body for a put-together look that breathes.",
+    details: [
+      "55% linen, 45% cotton blend",
+      "Modern spread collar",
+      "Natural corozo buttons",
+      "Slightly tapered modern fit",
+    ],
+    price: 1890,
+    images: [px(15059446), px(5273389)],
+    sizes: apparelSizes,
+    colors: ["Cocoa", "Clay"],
+    featured: true,
+  },
+  {
+    name: "Crimson Check Flannel",
+    slug: "crimson-check-flannel",
+    category: "shirts",
+    description:
+      "Brushed flannel in a bold crimson check. Layer it open over a black tee for instant weekend energy, or button it up with chinos when the evenings turn cool.",
+    details: [
+      "Double-brushed cotton flannel",
+      "Yarn-dyed crimson check pattern",
+      "Chest patch pocket",
+      "Regular fit",
+    ],
+    price: 1590,
+    images: [px(7261969), px(5273389)],
+    sizes: apparelSizes,
+    colors: ["Crimson Check"],
+  },
+  {
+    name: "Ivory Oxford Shirt",
+    slug: "ivory-oxford-shirt",
+    category: "shirts",
+    description:
+      "The interview-to-iftar shirt. A refined ivory oxford with a buttoned-down collar, cut clean through the body. Smart enough for the boardroom, soft enough for all-day wear.",
+    details: [
+      "Premium oxford weave cotton",
+      "Button-down collar",
+      "Single-needle stitching",
+      "Slim-regular hybrid fit",
+    ],
+    price: 1790,
+    compareAtPrice: 2190,
+    images: [px(15870282), px(17315606)],
+    sizes: apparelSizes,
+    colors: ["Ivory", "Sky Blue"],
+    badge: "Bestseller",
+  },
+  {
+    name: "Navy Twill Shirt",
+    slug: "navy-twill-shirt",
+    category: "shirts",
+    description:
+      "Deep navy twill with a subtle diagonal texture that catches the light. A do-everything shirt that moves from campus to client meetings without missing a beat.",
+    details: [
+      "Mid-weight cotton twill",
+      "Deep navy yarn-dyed finish",
+      "Reinforced side gussets",
+      "Regular fit",
+    ],
+    price: 1650,
+    images: [px(17315606), px(15870282)],
+    sizes: apparelSizes,
+    colors: ["Navy", "Ink Black"],
+  },
+  {
+    name: "Midnight Popover Shirt",
+    slug: "midnight-popover-shirt",
+    category: "shirts",
+    description:
+      "Half-placket, full impact. The Midnight popover pairs a clean black body with a relaxed collar — an easy one-move outfit for late-night addas and city drives.",
+    details: [
+      "Soft-washed cotton poplin",
+      "Half-placket popover styling",
+      "Matte black buttons",
+      "Relaxed fit",
+    ],
+    price: 1490,
+    images: [px(7743573), px(9558577)],
+    sizes: apparelSizes,
+    colors: ["Midnight Black"],
+    badge: "New",
+  },
+  {
+    name: "Bloom Printed Top",
+    slug: "bloom-printed-top",
+    category: "women",
+    description:
+      "A joyful multicolour print on a breezy, easy-fitting top. Made to move with you — from morning classes to golden-hour rooftop plans.",
+    details: [
+      "Lightweight woven viscose",
+      "Exclusive multicolour bloom print",
+      "Relaxed fit with soft drape",
+      "Cold hand wash recommended",
+    ],
+    price: 1390,
+    compareAtPrice: 1690,
+    images: [px(17822243), px(31719213)],
+    sizes: ["XS", "S", "M", "L", "XL"],
+    colors: ["Multicolour Bloom"],
+    badge: "New",
+    featured: true,
+  },
+  {
+    name: "Pearl Satin Blouse",
+    slug: "pearl-satin-blouse",
+    category: "women",
+    description:
+      "Liquid-smooth satin in a soft pearl tone. Tuck it into tailored trousers for work or knot it over a midi skirt for evenings — this blouse does elegance on autopilot.",
+    details: [
+      "Silky matte-satin weave",
+      "Concealed button placket",
+      "Slightly puffed shoulder",
+      "True to size",
+    ],
+    price: 1990,
+    images: [px(31719213), px(29090944)],
+    sizes: ["XS", "S", "M", "L", "XL"],
+    colors: ["Pearl", "Champagne"],
+    featured: true,
+  },
+  {
+    name: "Street Muse Co-ord Set",
+    slug: "street-muse-coord-set",
+    category: "women",
+    description:
+      "The co-ord that turns sidewalks into runways. A boxy cropped jacket with matching relaxed trousers in a washed neutral — wear together or split across a week of outfits.",
+    details: [
+      "Two-piece co-ord set",
+      "Washed cotton-blend twill",
+      "Cropped boxy jacket + relaxed trousers",
+      "Street-ready neutral tone",
+    ],
+    price: 2890,
+    compareAtPrice: 3400,
+    images: [px(18632573), px(19397152), px(15880219)],
+    sizes: ["XS", "S", "M", "L"],
+    colors: ["Washed Sand"],
+    badge: "Limited",
+    featured: true,
+  },
+  {
+    name: "Leather Luxe Moto Jacket",
+    slug: "leather-luxe-moto-jacket",
+    category: "women",
+    description:
+      "Buttery vegan leather with gunmetal hardware and a sharp cropped cut. The Moto adds instant edge to everything from slip dresses to plain white tees.",
+    details: [
+      "Premium vegan leather",
+      "Gunmetal zip hardware",
+      "Cropped moto silhouette",
+      "Fully lined interior",
+    ],
+    price: 3490,
+    images: [px(35223909), px(3160389)],
+    sizes: ["XS", "S", "M", "L"],
+    colors: ["Black"],
+  },
+  {
+    name: "Heritage Chronograph Watch",
+    slug: "heritage-chronograph-watch",
+    category: "accessories",
+    description:
+      "A refined chronograph with a deep blue dial and brushed steel bracelet. Water-resistant, scratch-resistant and endlessly compliment-attracting.",
+    details: [
+      "Japanese quartz chronograph movement",
+      "Brushed stainless steel bracelet",
+      "5 ATM water resistance",
+      "Mineral crystal glass",
+    ],
+    price: 3990,
+    compareAtPrice: 4990,
+    images: [px(5168137), px(6804457), px(11607481)],
+    sizes: oneSize,
+    colors: ["Steel Blue", "Black Leather"],
+    badge: "Bestseller",
+    featured: true,
+  },
+  {
+    name: "Metro Aviator Sunglasses",
+    slug: "metro-aviator-sunglasses",
+    category: "accessories",
+    description:
+      "Classic aviator lines with modern UV400 lenses. Lightweight alloy frames that disappear on your face and elevate every photo.",
+    details: [
+      "UV400 polarised lenses",
+      "Featherlight alloy frame",
+      "Adjustable silicone nose pads",
+      "Includes hard case + cloth",
+    ],
+    price: 1290,
+    images: [px(27353350), px(27353347)],
+    sizes: oneSize,
+    colors: ["Gunmetal", "Gold"],
+    featured: true,
+  },
+  {
+    name: "Studio Round Eyewear",
+    slug: "studio-round-eyewear",
+    category: "accessories",
+    description:
+      "Intellectual-core round frames with crystal-clear lenses. Zero power, one hundred percent presence — the finishing touch for minimalist fits.",
+    details: [
+      "Anti-glare clear lenses",
+      "Acetate round frame",
+      "Spring-loaded hinges",
+      "Unisex design",
+    ],
+    price: 990,
+    compareAtPrice: 1250,
+    images: [px(27353348), px(25651731)],
+    sizes: oneSize,
+    colors: ["Crystal", "Tortoise"],
+  },
+  {
+    name: "Indigo Denim Cap",
+    slug: "indigo-denim-cap",
+    category: "accessories",
+    description:
+      "Washed indigo denim with a softly curved brim and adjustable strap. The cap that makes bad hair days look intentional.",
+    details: [
+      "Washed indigo denim",
+      "Adjustable brass buckle strap",
+      "Curved 6-panel construction",
+      "One size fits most",
+    ],
+    price: 690,
+    images: [px(7470856), px(2347786)],
+    sizes: oneSize,
+    colors: ["Washed Indigo"],
+    badge: "New",
+  },
+];
+
+type SeedReview = {
+  productSlug: string;
+  author: string;
+  rating: number;
+  title: string;
+  body: string;
+  verified?: boolean;
+  daysAgo: number;
+};
+
+export const seedReviews: SeedReview[] = [
+  {
+    productSlug: "noir-essential-tee",
+    author: "Rafiul Hasan",
+    rating: 5,
+    title: "Best black tee I've owned",
+    body: "The fabric weight is perfect — thick without being hot. Survived 10+ washes and still looks brand new. Ordering two more.",
+    verified: true,
+    daysAgo: 4,
+  },
+  {
+    productSlug: "noir-essential-tee",
+    author: "Tanvir Ahmed",
+    rating: 5,
+    title: "Premium feel, local price",
+    body: "Honestly better than the imported tees I paid double for. Fits true to size, the collar doesn't sag. Delivery to Uttara took 2 days.",
+    verified: true,
+    daysAgo: 12,
+  },
+  {
+    productSlug: "noir-essential-tee",
+    author: "Sabbir Khan",
+    rating: 4,
+    title: "Great tee, slightly long",
+    body: "Quality is genuinely impressive. Just a note — the length runs slightly long, which I like, but heads up for shorter guys.",
+    daysAgo: 21,
+  },
+  {
+    productSlug: "cloud-white-crew-tee",
+    author: "Nusrat Jahan",
+    rating: 5,
+    title: "Stays white!",
+    body: "Bought this for my brother and stole it back. The white hasn't dulled at all after a month of wear. Very soft.",
+    verified: true,
+    daysAgo: 8,
+  },
+  {
+    productSlug: "cloud-white-crew-tee",
+    author: "Mehedi Hasan",
+    rating: 4,
+    title: "Clean and crisp",
+    body: "Nice drape, not see-through like most white tees. Would love a v-neck version.",
+    daysAgo: 17,
+  },
+  {
+    productSlug: "urban-graphite-tee",
+    author: "Shakil Mahmud",
+    rating: 5,
+    title: "That washed look",
+    body: "The garment-dyed finish looks so good in person. Perfect with cargo pants. Got compliments the first day I wore it.",
+    verified: true,
+    daysAgo: 6,
+  },
+  {
+    productSlug: "off-duty-oversized-tee",
+    author: "Farhana Rahman",
+    rating: 5,
+    title: "Oversized done right",
+    body: "Boxy but not sloppy. I sized down as suggested and the fit is exactly what I wanted. Fabric feels expensive.",
+    verified: true,
+    daysAgo: 3,
+  },
+  {
+    productSlug: "dhaka-bloom-resort-shirt",
+    author: "Imran Chowdhury",
+    rating: 5,
+    title: "Wore it to Cox's Bazar",
+    body: "This shirt WAS the trip. Breathable in 35° heat, and the print is even better in real life. Strangers asked where I got it.",
+    verified: true,
+    daysAgo: 9,
+  },
+  {
+    productSlug: "dhaka-bloom-resort-shirt",
+    author: "Adnan Karim",
+    rating: 4,
+    title: "Statement piece",
+    body: "Beautiful print and very light fabric. Buttons feel a bit delicate so handle with care, but overall a standout shirt.",
+    daysAgo: 15,
+  },
+  {
+    productSlug: "cocoa-linen-shirt",
+    author: "Zubair Alam",
+    rating: 5,
+    title: "Linen that doesn't crease into chaos",
+    body: "The cotton blend keeps it from wrinkling like pure linen. Wore it to a wedding holud and stayed comfortable all evening.",
+    verified: true,
+    daysAgo: 11,
+  },
+  {
+    productSlug: "ivory-oxford-shirt",
+    author: "Sajid Rahman",
+    rating: 5,
+    title: "My interview shirt",
+    body: "Got the job, giving partial credit to this shirt. Sharp collar, no ironing drama, fits clean without being tight.",
+    verified: true,
+    daysAgo: 5,
+  },
+  {
+    productSlug: "ivory-oxford-shirt",
+    author: "Fahim Islam",
+    rating: 4,
+    title: "Solid formal option",
+    body: "Good weight oxford cloth. Sleeves are the perfect length for once. Wish it came in more colours.",
+    daysAgo: 19,
+  },
+  {
+    productSlug: "crimson-check-flannel",
+    author: "Rakib Hossain",
+    rating: 4,
+    title: "Winter layering sorted",
+    body: "Soft brushed finish, great over a black tee. Runs slightly warm so best for Dec-Jan in Dhaka.",
+    daysAgo: 14,
+  },
+  {
+    productSlug: "navy-twill-shirt",
+    author: "Asif Iqbal",
+    rating: 5,
+    title: "Workhorse shirt",
+    body: "Three months of weekly wear and it still looks new. The twill texture photographs really well too.",
+    verified: true,
+    daysAgo: 22,
+  },
+  {
+    productSlug: "midnight-popover-shirt",
+    author: "Naim Uddin",
+    rating: 5,
+    title: "Effortless",
+    body: "Throw it on and you're dressed. The popover style stands out without trying too hard. Fabric is soft from day one.",
+    daysAgo: 7,
+  },
+  {
+    productSlug: "bloom-printed-top",
+    author: "Sadia Afrin",
+    rating: 5,
+    title: "My new favourite top",
+    body: "The print is gorgeous and the fabric floats — perfect for humid days. Got the M and the fit is relaxed but flattering.",
+    verified: true,
+    daysAgo: 2,
+  },
+  {
+    productSlug: "bloom-printed-top",
+    author: "Tasnim Akter",
+    rating: 5,
+    title: "Compliment magnet",
+    body: "Wore it to a friend's birthday and three people asked for the link. Colours are vibrant, stitching is neat.",
+    verified: true,
+    daysAgo: 10,
+  },
+  {
+    productSlug: "pearl-satin-blouse",
+    author: "Lamia Chowdhury",
+    rating: 5,
+    title: "Office to dinner, no outfit change",
+    body: "The satin catches light beautifully without looking shiny-cheap. Tucks perfectly. Worth every taka.",
+    verified: true,
+    daysAgo: 6,
+  },
+  {
+    productSlug: "pearl-satin-blouse",
+    author: "Raisa Hossain",
+    rating: 4,
+    title: "Elegant and versatile",
+    body: "Lovely drape and the puffed shoulder is subtle. Needs gentle washing but that's expected with satin.",
+    daysAgo: 16,
+  },
+  {
+    productSlug: "street-muse-coord-set",
+    author: "Anika Tabassum",
+    rating: 5,
+    title: "Runway feeling, rickshaw budget",
+    body: "The co-ord fits like it was tailored for me. I've worn the jacket separately with jeans too — endless combinations.",
+    verified: true,
+    daysAgo: 4,
+  },
+  {
+    productSlug: "leather-luxe-moto-jacket",
+    author: "Maliha Noor",
+    rating: 5,
+    title: "Instant edge",
+    body: "The vegan leather feels shockingly premium. Cropped cut sits perfectly on high-waisted anything. Obsessed.",
+    verified: true,
+    daysAgo: 13,
+  },
+  {
+    productSlug: "heritage-chronograph-watch",
+    author: "Arif Mahmud",
+    rating: 5,
+    title: "Punches way above its price",
+    body: "The blue dial looks stunning in sunlight. Bracelet needed one link removed and now it's perfect. Keeps precise time.",
+    verified: true,
+    daysAgo: 5,
+  },
+  {
+    productSlug: "heritage-chronograph-watch",
+    author: "Shafin Rahman",
+    rating: 5,
+    title: "Gift-worthy",
+    body: "Bought it for my father's birthday. The packaging alone made it feel luxury. He hasn't taken it off since.",
+    verified: true,
+    daysAgo: 18,
+  },
+  {
+    productSlug: "heritage-chronograph-watch",
+    author: "Tahmid Kabir",
+    rating: 4,
+    title: "Great daily watch",
+    body: "Solid build, comfortable weight. The chronograph pushers feel crisp. Lume could be brighter at night.",
+    daysAgo: 27,
+  },
+  {
+    productSlug: "metro-aviator-sunglasses",
+    author: "Rummana Islam",
+    rating: 5,
+    title: "Polarised perfection",
+    body: "Genuinely polarised — tested against glare on Hatirjheel. Super light, doesn't slide down in the heat.",
+    verified: true,
+    daysAgo: 8,
+  },
+  {
+    productSlug: "studio-round-eyewear",
+    author: "Nabila Sultana",
+    rating: 4,
+    title: "Cute intellectual vibes",
+    body: "Frames are lighter than expected and the anti-glare coating actually works on screens. Great for the price.",
+    daysAgo: 12,
+  },
+  {
+    productSlug: "indigo-denim-cap",
+    author: "Junaid Hasan",
+    rating: 5,
+    title: "Everyday cap",
+    body: "The washed denim goes with literally everything. Brim shape is perfect out of the box.",
+    verified: true,
+    daysAgo: 9,
+  },
+];

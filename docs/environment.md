@@ -1,0 +1,40 @@
+# Environment Variables
+
+The application uses exactly **one** environment variable. It is referenced in
+`src/db/index.ts` (app runtime) and `drizzle.config.ts` (drizzle-kit CLI).
+
+## `DATABASE_URL` — required
+
+- **Purpose:** PostgreSQL connection string for the app and for drizzle-kit
+  (`db:push`, `db:migrate`, `db:studio`).
+- **Where to set:**
+  - Local: `.env` (copy from `.env.example`; git-ignored).
+  - Vercel: Project → Settings → Environment Variables (Production + Preview).
+- **Example value (placeholder — not a real credential):**
+  ```text
+  DATABASE_URL="postgresql://USER:PASSWORD@ep-xxxx-xxxx-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  ```
+- **Notes:**
+  - For Neon, use the **pooled** (`-pooler`) URL with `sslmode=require`. The app
+    detects `*.neon.tech` hosts and uses the HTTPS driver
+    (`@neondatabase/serverless`), which avoids direct TCP on port 5432 — important
+    on serverless runtimes.
+  - Non-Neon Postgres hosts use a `node-postgres` pool instead (same code path,
+    no config change needed).
+  - The app throws `DATABASE_URL is required` at startup/build if it is missing.
+
+## `NODE_ENV` — optional (standard)
+
+- Set automatically by Vercel and by `next dev` / `next build` / `next start`.
+- Only referenced to skip dev-only connection-pool caching. You do not need to set
+  it manually.
+
+## Secret hygiene
+
+- Never commit `.env`. Never paste credentials into docs, issues, or chat.
+- ⚠️ **Incident note:** a live Neon `DATABASE_URL` (user `neondb_owner`) was found
+  committed in the local `.env` file during this production-readiness pass. Before
+  going live: **rotate that credential in the Neon dashboard** (reset the password
+  / create a dedicated role), update `.env` locally and `DATABASE_URL` in Vercel,
+  and confirm `.env` has never been pushed to any remote
+  (`git log --all -- .env`). Treat the old password as compromised.

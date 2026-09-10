@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+build/
+
+# Environment files (never commit real credentials)
+.env
+.env*.local
+.env.development
+.env.production
+
+# Vercel
+.vercel/
+
+# TypeScript
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+*.pem
+.vscode/*
+!.vscode/extensions.json
+.idea/

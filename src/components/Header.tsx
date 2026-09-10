@@ -1,0 +1,132 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useCart } from "@/lib/cart-context";
+
+const nav = [
+  { href: "/", label: "Home" },
+  { href: "/shop", label: "Shop All" },
+  { href: "/shop?category=t-shirts", label: "T-Shirts" },
+  { href: "/shop?category=shirts", label: "Shirts" },
+  { href: "/shop?category=women", label: "Women" },
+  { href: "/shop?category=accessories", label: "Accessories" },
+];
+
+export default function Header() {
+  const { count, openCart } = useCart();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    // Intentional external-system sync: close the mobile menu on navigation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMenuOpen(false);
+  }, [pathname]);
+
+  return (
+    <header className="sticky top-0 z-40">
+      <div className="bg-ink text-cream text-center text-[11px] sm:text-xs tracking-[0.18em] uppercase py-2 px-4">
+        Free delivery across Bangladesh on orders over ৳3,000 · Cash on delivery available
+      </div>
+      <div
+        className={`transition-all duration-300 border-b ${
+          scrolled
+            ? "bg-cream/90 backdrop-blur-md border-sand shadow-[0_1px_20px_rgba(27,22,17,0.06)]"
+            : "bg-cream border-transparent"
+        }`}
+      >
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between gap-4">
+            <button
+              className="lg:hidden -ml-2 p-2 text-ink"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                {menuOpen ? (
+                  <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+                ) : (
+                  <path d="M3 6h18M3 12h18M3 18h12" strokeLinecap="round" />
+                )}
+              </svg>
+            </button>
+
+            <Link href="/" className="flex items-baseline gap-1.5 select-none">
+              <span className="font-display text-2xl font-semibold tracking-tight">
+                Deshi<span className="text-clay">Cart</span>
+              </span>
+              <span className="hidden sm:inline text-[10px] uppercase tracking-[0.3em] text-ink-soft/70">
+                Dhaka
+              </span>
+            </Link>
+
+            <nav className="hidden lg:flex items-center gap-7">
+              {nav.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="text-[13px] font-medium tracking-wide text-ink-soft hover:text-clay transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="flex items-center gap-1">
+              <Link
+                href="/shop"
+                className="hidden sm:flex p-2 text-ink hover:text-clay transition-colors"
+                aria-label="Search products"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+                </svg>
+              </Link>
+              <button
+                onClick={openCart}
+                className="relative p-2 text-ink hover:text-clay transition-colors"
+                aria-label="Open cart"
+              >
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <path d="M6 7h12l1.2 12.2a1.5 1.5 0 0 1-1.5 1.8H6.3a1.5 1.5 0 0 1-1.5-1.8L6 7Z" />
+                  <path d="M9 10V6a3 3 0 0 1 6 0v4" strokeLinecap="round" />
+                </svg>
+                {count > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-clay px-1 text-[10px] font-bold text-white animate-fade-in">
+                    {count}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {menuOpen && (
+          <nav className="lg:hidden border-t border-sand bg-cream px-4 pb-4 pt-2 animate-fade-in">
+            {nav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="block py-2.5 text-sm font-medium text-ink-soft hover:text-clay transition-colors border-b border-sand/60 last:border-0"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </div>
+    </header>
+  );
+}

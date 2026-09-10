@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-fraunces), "Georgia", serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #1b1611;
+  --color-ink-soft: #4a4238;
+  --color-cream: #faf6f0;
+  --color-sand: #f0e8dc;
+  --color-clay: #b3541e;
+  --color-clay-dark: #93430f;
+  --color-leaf: #1f513f;
+  --color-gold: #c8963e;
+
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.6s ease both;
+  --animate-slide-in: slide-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-marquee: marquee 28s linear infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* staggered reveal helper */
+.stagger > * {
+  animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.12s; }
+.stagger > *:nth-child(3) { animation-delay: 0.19s; }
+.stagger > *:nth-child(4) { animation-delay: 0.26s; }
+.stagger > *:nth-child(5) { animation-delay: 0.33s; }
+.stagger > *:nth-child(6) { animation-delay: 0.4s; }
+.stagger > *:nth-child(7) { animation-delay: 0.47s; }
+.stagger > *:nth-child(8) { animation-delay: 0.54s; }
+
+/* image zoom on card hover */
+.img-zoom {
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.group:hover .img-zoom {
+  transform: scale(1.06);
+}
+
+::selection {
+  background: var(--color-clay);
+  color: #fff;
+}
+
+/* thin elegant scrollbar for drawer */
+.scroll-slim::-webkit-scrollbar {
+  width: 5px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: #d6c9b8;
+  border-radius: 999px;
+}
