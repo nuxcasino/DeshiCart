@@ -6,6 +6,7 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { getSessionUser } from "@/lib/auth";
 import ProductCard from "@/components/ProductCard";
 import { isLocale, lp } from "@/lib/locale";
+import { tFor } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -37,25 +38,25 @@ export default async function WishlistPage({
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-        Saved for later
+        {tFor(lang, "wishlist.kicker")}
       </p>
       <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-        Wishlist
+        {tFor(lang, "wishlist.title")}
       </h1>
       {items.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-24 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sand text-3xl">
             🤍
           </div>
-          <p className="font-display text-xl">Nothing saved yet</p>
+          <p className="font-display text-xl">{tFor(lang, "wishlist.empty")}</p>
           <p className="max-w-sm text-sm text-ink-soft">
-            Tap the heart on any product to keep it here.
+            {tFor(lang, "wishlist.emptyHint")}
           </p>
           <Link
             href={lp(lang, "/shop")}
             className="mt-2 rounded-full bg-ink px-6 py-3 text-sm font-bold text-cream transition-colors hover:bg-clay"
           >
-            Browse the Shop
+            {tFor(lang, "wishlist.browse")}
           </Link>
         </div>
       ) : (

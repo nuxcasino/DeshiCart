@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { localeAlternates } from "@/lib/seo";
 
 export const metadata: Metadata = {
+  ...localeAlternates("/faq"),
   title: "FAQ",
   description: "Answers about delivery, payments, sizing, exchanges and returns at DeshiCart.",
 };

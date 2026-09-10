@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { localeAlternates } from "@/lib/seo";
 import { isLocale, lp } from "@/lib/locale";
 import { db } from "@/db";
 import { shippingZones } from "@/db/schema";
@@ -7,6 +8,7 @@ import { asc } from "drizzle-orm";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FLAT, formatBDT } from "@/lib/format";
 
 export const metadata: Metadata = {
+  ...localeAlternates("/shipping"),
   title: "Shipping & Delivery",
   description: "DeshiCart delivery fees, free-shipping threshold and timelines across Bangladesh.",
 };

@@ -4,13 +4,16 @@ import { getCategories, getShopProducts, type SortKey } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo } from "@/lib/variants";
 import { isLocale, lp, pick } from "@/lib/locale";
+import { tFor } from "@/lib/i18n";
 import ProductCard from "@/components/ProductCard";
 import FiltersBar from "@/components/FiltersBar";
 import type { Metadata } from "next";
+import { localeAlternates } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  ...localeAlternates("/shop"),
   title: "Shop All — DeshiCart",
   description: "Browse trendy t-shirts, shirts, women's fashion and accessories.",
 };
@@ -57,7 +60,7 @@ export default async function ShopPage({
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 animate-fade-up">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-          {activeCat ? pick(lang, activeCat, "tagline") : "The full collection"}
+          {activeCat ? pick(lang, activeCat, "tagline") : tFor(lang, "shop.allCollection")}
         </p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
           {activeCat ? pick(lang, activeCat, "name") : "Shop All"}
@@ -77,16 +80,15 @@ export default async function ShopPage({
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-sand text-3xl">
             🔍
           </div>
-          <p className="font-display text-xl">Nothing matched that</p>
+          <p className="font-display text-xl">{tFor(lang, "shop.noMatch")}</p>
           <p className="max-w-sm text-sm text-ink-soft">
-            Try a different search, or clear the filters to see the full
-            collection.
+            {tFor(lang, "shop.noMatchHint")}
           </p>
           <Link
             href={lp(lang, "/shop")}
             className="mt-2 rounded-full bg-ink px-6 py-3 text-sm font-bold text-cream transition-colors hover:bg-clay"
           >
-            Clear filters
+            {tFor(lang, "shop.clearFilters")}
           </Link>
         </div>
       ) : (

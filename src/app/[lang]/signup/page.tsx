@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/hono";
+import { useLang } from "@/lib/i18n";
 import { isLocale, lp } from "@/lib/locale";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useLang();
   const { lang: raw } = useParams();
   const lang = isLocale(typeof raw === "string" ? raw : null) ? (raw as "bn" | "en") : "bn";
   const [form, setForm] = useState({
@@ -40,10 +42,10 @@ export default function SignupPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-        Join DeshiCart
+        {t("auth.join")}
       </p>
       <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">
-        Create account
+        {t("auth.createTitle")}
       </h1>
       <form
         onSubmit={submit}
@@ -51,7 +53,7 @@ export default function SignupPage() {
       >
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Full name
+            {t("auth.fullName")}
           </span>
           <input
             required
@@ -63,7 +65,7 @@ export default function SignupPage() {
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Email
+            {t("auth.email")}
           </span>
           <input
             required
@@ -76,7 +78,7 @@ export default function SignupPage() {
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Phone
+            {t("auth.phone")}
           </span>
           <input
             type="tel"
@@ -88,7 +90,7 @@ export default function SignupPage() {
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Password (min 8 characters)
+            {t("auth.passwordMin")}
           </span>
           <input
             required
@@ -106,12 +108,12 @@ export default function SignupPage() {
           disabled={sending}
           className="w-full rounded-full bg-ink py-3.5 text-sm font-bold text-cream transition-colors hover:bg-clay disabled:opacity-60"
         >
-          {sending ? "Creating account…" : "Create account"}
+          {sending ? t("auth.creating") : t("auth.createTitle")}
         </button>
         <p className="text-center text-sm text-ink-soft">
-          Already have an account?{" "}
+          {t("auth.haveAccount")}{" "}
           <Link href={lp(lang, "/login")} className="font-bold text-clay hover:underline">
-            Log in
+            {t("auth.loginLink")}
           </Link>
         </p>
       </form>

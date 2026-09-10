@@ -10,6 +10,7 @@ import LogoutButton from "@/components/LogoutButton";
 import ReturnRequestButton from "@/components/ReturnRequestButton";
 import { users } from "@/db/schema";
 import { isLocale, lp } from "@/lib/locale";
+import { tFor } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -40,10 +41,10 @@ export default async function AccountPage({
       <div className="flex flex-wrap items-start justify-between gap-4 animate-fade-up">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-            My account
+            {tFor(lang, "account.kicker")}
           </p>
           <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">
-            Hello, {user.name.split(" ")[0]}
+            {tFor(lang, "account.hello")}, {user.name.split(" ")[0]}
           </h1>
           <p className="mt-2 text-sm text-ink-soft">
             {toSafeUser(user).email}
@@ -58,16 +59,16 @@ export default async function AccountPage({
 
       <section className="mt-10">
         <h2 className="font-display text-2xl font-semibold tracking-tight">
-          Order history
+          {tFor(lang, "account.orders")}
         </h2>
         {myOrders.length === 0 ? (
           <div className="mt-4 rounded-xl border border-dashed border-sand p-8 text-center">
-            <p className="text-sm text-ink-soft">You haven&apos;t placed any orders yet.</p>
+            <p className="text-sm text-ink-soft">{tFor(lang, "account.noOrders")}</p>
             <Link
               href={lp(lang, "/shop")}
               className="mt-4 inline-block rounded-full bg-ink px-6 py-3 text-sm font-bold text-cream transition-colors hover:bg-clay"
             >
-              Start shopping
+              {tFor(lang, "account.startShopping")}
             </Link>
           </div>
         ) : (
@@ -114,7 +115,7 @@ export default async function AccountPage({
       {myReturns.length > 0 && (
         <section className="mt-10">
           <h2 className="font-display text-2xl font-semibold tracking-tight">
-            Return requests
+            {tFor(lang, "account.returns")}
           </h2>
           <ul className="mt-4 divide-y divide-sand overflow-hidden rounded-xl border border-sand bg-white">
             {myReturns.map((r) => (
@@ -136,7 +137,7 @@ export default async function AccountPage({
 
       <section className="mt-10">
         <h2 className="font-display text-2xl font-semibold tracking-tight">
-          Saved addresses
+          {tFor(lang, "account.addresses")}
         </h2>
         <div className="mt-4">
           <AddressManager initial={myAddresses} />

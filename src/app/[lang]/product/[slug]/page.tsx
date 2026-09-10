@@ -10,6 +10,8 @@ import {
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo, getProductVariants } from "@/lib/variants";
 import { isLocale, lp, pick, pickList } from "@/lib/locale";
+import { localeAlternates } from "@/lib/seo";
+import { tFor } from "@/lib/i18n";
 import { formatBDT } from "@/lib/format";
 import Gallery from "@/components/Gallery";
 import PurchasePanel from "@/components/PurchasePanel";
@@ -33,6 +35,7 @@ export async function generateMetadata({
   return {
     title: name,
     description,
+    ...localeAlternates(`/product/${product.slug}`),
     openGraph: {
       title: name,
       description,
@@ -178,7 +181,7 @@ export default async function ProductPage({
         <div className="grid gap-10 lg:grid-cols-3">
           <div>
             <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-              Customer Reviews
+              {tFor(lang, "product.reviews")}
             </h2>
             <div className="mt-4 flex items-center gap-3">
               <span className="font-display text-5xl font-semibold">
@@ -219,9 +222,9 @@ export default async function ProductPage({
           <div className="lg:col-span-2">
             {reviews.length === 0 ? (
               <div className="rounded-xl border border-dashed border-sand p-10 text-center">
-                <p className="font-display text-lg">No reviews yet</p>
+                <p className="font-display text-lg">{tFor(lang, "product.noReviews")}</p>
                 <p className="mt-2 text-sm text-ink-soft">
-                  Be the first to share your thoughts on this piece.
+                  {tFor(lang, "product.noReviewsHint")}
                 </p>
               </div>
             ) : (
@@ -278,7 +281,7 @@ export default async function ProductPage({
       {related.length > 0 && (
         <section className="mt-20">
           <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-            You may also like
+            {tFor(lang, "product.related")}
           </h2>
           <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
             {related.map((p) => (

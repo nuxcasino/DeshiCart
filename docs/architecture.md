@@ -102,6 +102,24 @@ drizzle/                  Generated SQL migration (drizzle-kit)
 drizzle.config.ts         drizzle-kit config (reads DATABASE_URL)
 ```
 
+## Internationalization (BN-first)
+
+- **Routing:** `src/app/[lang]` with `bn|en`; `src/middleware.ts` redirects
+  unprefixed pages to `/bn` (cookie preference respected) and sets `x-locale`,
+  which the root layout turns into `<html lang>`. `/api` and `/admin` are
+  unprefixed by design (admin backoffice stays English).
+- **Chrome strings:** `src/lib/i18n.tsx` dictionary (`useLang` client hook,
+  `tFor` server helper, `LangToggle` navigates between locale URLs).
+- **Product/category content:** `name_bn` / `description_bn` / `details_bn` /
+  `tagline_bn` columns edited in admin; `pick`/`pickList` (`src/lib/locale.ts`)
+  render BN with EN fallback — empty translations never render blank. Search
+  matches both languages.
+- **SEO:** per-page canonical + `hreflang` (`bn`, `en`, `x-default` → BN) via
+  `localeAlternates()` (`src/lib/seo.ts`); sitemap lists both locales;
+  robots covers locale paths.
+- **Known limits:** API validation messages, cart snapshots, and the admin UI
+  remain English; product content has no versioned translation workflow.
+
 ## Authentication flow
 
 Email + password accounts with scrypt hashing (`src/lib/auth.ts`, Node `crypto` —

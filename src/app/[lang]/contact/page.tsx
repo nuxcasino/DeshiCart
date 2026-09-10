@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { localeAlternates } from "@/lib/seo";
 import ContactForm from "@/components/ContactForm";
 
 export const metadata: Metadata = {
+  ...localeAlternates("/contact"),
   title: "Contact Us",
   description: "Contact DeshiCart support — email, phone and contact form.",
 };

@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/lib/cart-context";
 import { LangProvider } from "@/lib/i18n";
 import { isLocale, type Locale } from "@/lib/locale";
+import { localeAlternates } from "@/lib/seo";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
@@ -34,6 +35,7 @@ export const metadata: Metadata = {
     default: "DeshiCart — Trendy Fashion for Bangladesh",
     template: "%s — DeshiCart",
   },
+  ...localeAlternates("/"),
   description:
     "Shop trendy t-shirts, shirts and fashion accessories crafted for young Bangladesh. Free delivery over ৳3,000.",
   openGraph: {

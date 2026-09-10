@@ -1,8 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { localeAlternates } from "@/lib/seo";
 import { isLocale, lp } from "@/lib/locale";
 
 export const metadata: Metadata = {
+  ...localeAlternates("/returns"),
   title: "Returns & Exchanges",
   description: "DeshiCart 7-day exchange and return policy, refunds and how to request a return.",
 };

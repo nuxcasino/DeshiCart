@@ -15,6 +15,7 @@ import {
 } from "@/lib/hono";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
+import { useLang } from "@/lib/i18n";
 import { isLocale, lp } from "@/lib/locale";
 import type { District, Division, Upazila } from "@/db/schema";
 
@@ -87,6 +88,7 @@ function CheckoutForm() {
   const { items, subtotal, clearCart } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useLang();
   const { lang: raw } = useParams();
   const lang = isLocale(typeof raw === "string" ? raw : null) ? (raw as "bn" | "en") : "bn";
 
@@ -388,16 +390,16 @@ function CheckoutForm() {
           🛍️
         </div>
         <h1 className="mt-5 font-display text-3xl font-semibold">
-          Your bag is empty
+          {t("cart.empty")}
         </h1>
         <p className="mt-3 text-sm text-ink-soft">
-          Add a few pieces before heading to checkout.
+          {t("cart.emptyHint")}
         </p>
         <Link
           href={lp(lang, "/shop")}
           className="mt-6 rounded-full bg-ink px-8 py-3.5 text-sm font-bold text-cream transition-colors hover:bg-clay"
         >
-          Browse the Shop
+          {t("checkout.browse")}
         </Link>
       </div>
     );
@@ -407,10 +409,10 @@ function CheckoutForm() {
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 animate-fade-up">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-          Almost there
+          {t("checkout.almost")}
         </p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">
-          Checkout
+          {t("checkout.title")}
         </h1>
       </div>
 
@@ -419,12 +421,12 @@ function CheckoutForm() {
           {/* Contact */}
           <section className="rounded-xl border border-sand bg-white p-6 sm:p-7">
             <h2 className="font-display text-lg font-semibold">
-              1 · Contact Details
+              {t("checkout.contact")}
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Full name *
+                  {t("checkout.fullName")}
                 </span>
                 <input
                   required
@@ -436,7 +438,7 @@ function CheckoutForm() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Phone *
+                  {t("checkout.phone")}
                 </span>
                 <input
                   required
@@ -449,7 +451,7 @@ function CheckoutForm() {
               </label>
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Email *
+                  {t("checkout.email")}
                 </span>
                 <input
                   required
@@ -466,12 +468,12 @@ function CheckoutForm() {
           {/* Delivery */}
           <section className="rounded-xl border border-sand bg-white p-6 sm:p-7">
             <h2 className="font-display text-lg font-semibold">
-              2 · Delivery Address
+              {t("checkout.delivery")}
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Street address *
+                  {t("checkout.street")}
                 </span>
                 <input
                   required
@@ -483,7 +485,7 @@ function CheckoutForm() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Division *
+                  {t("checkout.division")}
                 </span>
                 <select
                   required
@@ -503,7 +505,7 @@ function CheckoutForm() {
                   }}
                   className="w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-clay"
                 >
-                  <option value="">Select division…</option>
+                  <option value="">{t("checkout.selectDivision")}</option>
                   {divisions.map((d) => (
                     <option key={d.id} value={d.id}>{d.nameEn}</option>
                   ))}
@@ -511,7 +513,7 @@ function CheckoutForm() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  District *
+                  {t("checkout.district")}
                 </span>
                 <select
                   required
@@ -531,7 +533,7 @@ function CheckoutForm() {
                   }}
                   className="w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-clay disabled:opacity-50"
                 >
-                  <option value="">Select district…</option>
+                  <option value="">{t("checkout.selectDistrict")}</option>
                   {districts.map((d) => (
                     <option key={d.id} value={d.id}>{d.nameEn}</option>
                   ))}
@@ -539,7 +541,7 @@ function CheckoutForm() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Upazila / Thana
+                  {t("checkout.upazila")}
                 </span>
                 <select
                   value={form.upazilaId}
@@ -547,7 +549,7 @@ function CheckoutForm() {
                   onChange={set("upazilaId")}
                   className="w-full rounded-lg border border-sand bg-white px-4 py-3 text-sm outline-none transition-colors focus:border-clay disabled:opacity-50"
                 >
-                  <option value="">Select upazila…</option>
+                  <option value="">{t("checkout.selectUpazila")}</option>
                   {upazilas.map((u) => (
                     <option key={u.id} value={u.id}>{u.nameEn}</option>
                   ))}
@@ -555,7 +557,7 @@ function CheckoutForm() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Postcode
+                  {t("checkout.postcode")}
                 </span>
                 <input
                   value={form.postcode}
@@ -567,7 +569,7 @@ function CheckoutForm() {
               </label>
               <label className="block sm:col-span-2">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-                  Delivery notes
+                  {t("checkout.notes")}
                 </span>
                 <input
                   value={form.notes}
@@ -581,7 +583,7 @@ function CheckoutForm() {
 
           {/* Payment */}
           <section className="rounded-xl border border-sand bg-white p-6 sm:p-7">
-            <h2 className="font-display text-lg font-semibold">3 · Payment</h2>
+            <h2 className="font-display text-lg font-semibold">{t("checkout.payment")}</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {methods.map((pm) => (
                 <button
@@ -623,7 +625,7 @@ function CheckoutForm() {
         {/* Summary */}
         <aside className="lg:col-span-2">
           <div className="sticky top-28 rounded-xl border border-sand bg-white p-6 sm:p-7">
-            <h2 className="font-display text-lg font-semibold">Order Summary</h2>
+            <h2 className="font-display text-lg font-semibold">{t("checkout.summary")}</h2>
             <ul className="scroll-slim mt-5 max-h-72 space-y-4 overflow-y-auto pr-1">
               {items.map((item) => (
                 <li key={`${item.productId}-${item.size}`} className="flex gap-3">
@@ -664,7 +666,7 @@ function CheckoutForm() {
                     onClick={removeCoupon}
                     className="text-xs font-bold text-ink-soft hover:text-clay hover:underline"
                   >
-                    Remove
+                    {t("checkout.remove")}
                   </button>
                 </div>
               ) : (
@@ -673,7 +675,7 @@ function CheckoutForm() {
                     <input
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                      placeholder="Coupon code"
+                      placeholder={t("checkout.couponPh")}
                       className="w-full rounded-lg border border-sand px-3 py-2.5 text-sm uppercase outline-none transition-colors focus:border-clay"
                     />
                     <button
@@ -681,7 +683,7 @@ function CheckoutForm() {
                       onClick={applyCouponCode}
                       className="shrink-0 rounded-lg bg-ink px-4 py-2.5 text-xs font-bold text-cream transition-colors hover:bg-clay"
                     >
-                      Apply
+                      {t("checkout.apply")}
                     </button>
                   </div>
                   {couponMsg && (
@@ -692,17 +694,17 @@ function CheckoutForm() {
             </div>
             <div className="mt-4 space-y-2 border-t border-sand pt-4 text-sm">
               <div className="flex justify-between">
-                <span className="text-ink-soft">Subtotal</span>
+                <span className="text-ink-soft">{t("cart.subtotal")}</span>
                 <span className="font-semibold">{formatBDT(subtotal)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-ink-soft">Discount</span>
+                  <span className="text-ink-soft">{t("checkout.discount")}</span>
                   <span className="font-semibold text-leaf">−{formatBDT(discount)}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-ink-soft">Delivery</span>
+                <span className="text-ink-soft">{t("cart.delivery")}</span>
                 <span className="font-semibold">
                   {shipping === 0 ? (
                     <span className="text-leaf">Free</span>
@@ -718,7 +720,7 @@ function CheckoutForm() {
                 </div>
               )}
               <div className="flex justify-between border-t border-sand pt-3 text-base">
-                <span className="font-bold">Total</span>
+                <span className="font-bold">{t("checkout.total")}</span>
                 <span className="font-display text-xl font-semibold">
                   {formatBDT(total)}
                 </span>
@@ -736,10 +738,10 @@ function CheckoutForm() {
               disabled={status === "sending"}
               className="mt-6 w-full rounded-full bg-ink py-4 text-sm font-bold text-cream transition-all hover:bg-clay hover:shadow-[0_8px_24px_rgba(179,84,30,0.35)] disabled:opacity-60"
             >
-              {status === "sending" ? "Placing order…" : `Place Order · ${formatBDT(total)}`}
+              {status === "sending" ? t("checkout.placing") : `${t("checkout.placeOrder")} · ${formatBDT(total)}`}
             </button>
             <p className="mt-3 text-center text-[11px] text-ink-soft">
-              🔒 Secure checkout · 7-day easy exchange
+              {t("checkout.secure")}
             </p>
           </div>
         </aside>
