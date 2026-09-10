@@ -50,6 +50,20 @@ The application uses exactly **one** environment variable. It is referenced in
   Vercel by default). Set it explicitly when using a custom domain.
 - Example: `SITE_URL="https://deshi-cart.vercel.app"`
 
+## Notifications — all optional
+
+Order SMS + email (`src/lib/notify.ts`) send on placement (COD), payment success,
+and admin status changes. **Every variable below is optional:** when SMS or SMTP
+credentials are absent, that channel is skipped with a console log and ordering
+works normally.
+
+- **SMS via SSL Wireless:** `SSLW_API_TOKEN`, `SSLW_SID` — POSTs to the v3
+  `send-sms` API; customer numbers are normalized to `8801XXXXXXXXX`.
+- **Email via SMTP:** `SMTP_HOST`, `SMTP_PORT` (default 587, 465 = implicit TLS),
+  `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (falls back to `SMTP_USER`).
+- Notification failures are caught and logged — they never fail an order, payment
+  callback, or admin update.
+
 ## Secret hygiene
 
 - Never commit `.env`. Never paste credentials into docs, issues, or chat.

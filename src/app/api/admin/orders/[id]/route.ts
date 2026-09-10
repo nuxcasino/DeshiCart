@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getAdminFromRequest } from "@/lib/admin";
+import { notifyStatusChange } from "@/lib/notify";
 
 const STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "cancelled", "refunded"];
@@ -33,6 +34,13 @@ export async function PATCH(
     if (Object.keys(patch).length === 0) {
       return NextResponse.json({ error: "Nothing to update." }, { status: 400 });
     }
+    const [existing] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, orderId));
+    if (!existing) {
+      return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
     const [updated] = await db
       .update(orders)
       .set(patch)
@@ -40,6 +48,9 @@ export async function PATCH(
       .returning();
     if (!updated) {
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
+    if (patch.status && patch.status !== existing.status) {
+      await notifyStatusChange(updated, existing.status, patch.status);
     }
     return NextResponse.json({ order: updated });
   } catch {

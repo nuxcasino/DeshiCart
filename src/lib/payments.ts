@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { releaseStock } from "./stock";
+import { notifyPaymentReceived } from "./notify";
 import {
   querySslcommerzTransaction,
   validateSslcommerzTransaction,
@@ -77,6 +78,7 @@ export async function settleOrderPayment(
       storeAmount: check.storeAmount || null,
     })
     .where(eq(orders.id, order.id));
+  await notifyPaymentReceived(order);
   return { outcome: "paid", orderId: order.id };
 }
 

@@ -4,6 +4,7 @@ import { orderItems, orders, products } from "@/db/schema";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { shippingFor } from "@/lib/format";
 import { getSessionUserFromRequest } from "@/lib/auth";
+import { notifyOrderPlaced } from "@/lib/notify";
 
 type IncomingItem = {
   productId: number;
@@ -139,6 +140,8 @@ export async function POST(request: Request) {
       await db
         .insert(orderItems)
         .values(lineItems.map((li) => ({ ...li, orderId: order.id })));
+
+      await notifyOrderPlaced(order, lineItems);
 
       return NextResponse.json({ orderId: order.id }, { status: 201 });
     } catch {
