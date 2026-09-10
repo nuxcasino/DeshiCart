@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { authClient } from "@/lib/hono";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,16 +16,10 @@ export default function LoginPage() {
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const body = await res.json().catch(() => ({}));
+      const res = await authClient.login.$post({ json: form });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(
-          typeof body?.error === "string" ? body.error : "Login failed. Please try again."
-        );
+        setError(body?.error ?? "Login failed. Please try again.");
         return;
       }
       router.push("/account");

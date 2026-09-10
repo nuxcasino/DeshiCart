@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { authClient } from "@/lib/hono";
 
 export default function LogoutButton() {
   const router = useRouter();
@@ -10,7 +11,7 @@ export default function LogoutButton() {
   const logout = async () => {
     setSending(true);
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
+      await authClient.logout.$post();
     } finally {
       router.push("/");
       router.refresh();

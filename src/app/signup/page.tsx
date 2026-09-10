@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { authClient } from "@/lib/hono";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,16 +21,10 @@ export default function SignupPage() {
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const body = await res.json().catch(() => ({}));
+      const res = await authClient.signup.$post({ json: form });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(
-          typeof body?.error === "string" ? body.error : "Signup failed. Please try again."
-        );
+        setError(body?.error ?? "Signup failed. Please try again.");
         return;
       }
       router.push("/account");

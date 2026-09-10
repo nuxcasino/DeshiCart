@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { wishlistClient } from "@/lib/hono";
 
 export default function WishlistButton({
   productId,
@@ -21,16 +22,12 @@ export default function WishlistButton({
     if (busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/wishlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId }),
-      });
+      const res = await wishlistClient.index.$post({ json: { productId } });
       if (res.status === 401) {
         router.push("/login");
         return;
       }
-      const body = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as { saved?: boolean };
       if (res.ok && typeof body.saved === "boolean") setSaved(body.saved);
     } finally {
       setBusy(false);

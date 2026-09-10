@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
+import { authClient } from "@/lib/hono";
 import { LangToggle, useLang, type DictKey } from "@/lib/i18n";
 
 const nav: Array<{ href: string; labelKey: DictKey }> = [
@@ -38,10 +39,15 @@ export default function Header() {
 
   useEffect(() => {
     // Session lookup in a fetch callback (not a direct effect-body setState).
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => setAccountName(d?.user?.name ?? null))
-      .catch(() => setAccountName(null));
+    (async () => {
+      try {
+        const r = await authClient.me.$get();
+        const d = (await r.json()) as { user?: { name?: string } | null };
+        setAccountName(d?.user?.name ?? null);
+      } catch {
+        setAccountName(null);
+      }
+    })();
   }, [pathname]);
 
   return (

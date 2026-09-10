@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { returnsClient } from "@/lib/hono";
 
 export default function ReturnRequestButton({
   orderId,
@@ -23,14 +24,12 @@ export default function ReturnRequestButton({
     setSending(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/returns", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId, reason: reason.trim() }),
+      const res = await returnsClient.index.$post({
+        json: { orderId, reason: reason.trim() },
       });
-      const body = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setMessage(typeof body?.error === "string" ? body.error : "Request failed.");
+        setMessage(body?.error ?? "Request failed.");
         return;
       }
       setDone(true);

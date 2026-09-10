@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Address } from "@/db/schema";
+import { addressesClient } from "@/lib/hono";
 
 export default function AddressManager({
   initial,
@@ -29,18 +30,18 @@ export default function AddressManager({
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/addresses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(typeof body?.error === "string" ? body.error : "Could not save address.");
+      const res = await addressesClient.index.$post({ json: form });
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        address?: Address;
+      };
+      const saved = body.address;
+      if (!res.ok || !saved) {
+        setError(body?.error ?? "Could not save address.");
         return;
       }
       setItems((prev) =>
-        prev.map((a) => ({ ...a, isDefault: false })).concat(body.address)
+        prev.map((a) => ({ ...a, isDefault: false })).concat(saved)
       );
       setForm({ label: "Home", name: "", phone: "", address: "", city: "Dhaka", postcode: "" });
       refresh();
@@ -50,7 +51,7 @@ export default function AddressManager({
   };
 
   const remove = async (id: number) => {
-    const res = await fetch(`/api/addresses/${id}`, { method: "DELETE" });
+    const res = await addressesClient[":id"].$delete({ param: { id: String(id) } });
     if (res.ok) {
       setItems((prev) => {
         const next = prev.filter((a) => a.id !== id);
@@ -65,10 +66,9 @@ export default function AddressManager({
   };
 
   const makeDefault = async (id: number) => {
-    const res = await fetch(`/api/addresses/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isDefault: true }),
+    const res = await addressesClient[":id"].$patch({
+      param: { id: String(id) },
+      json: { isDefault: true },
     });
     if (res.ok) {
       setItems((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })));

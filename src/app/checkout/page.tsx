@@ -4,7 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
-import { ordersClient, paymentsClient } from "@/lib/hono";
+import {
+  authClient,
+  couponsClient,
+  ordersClient,
+  paymentsClient,
+  shippingClient,
+} from "@/lib/hono";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
 
@@ -70,21 +76,31 @@ function CheckoutForm() {
 
   // Prefill from the account (if logged in) without clobbering typed input.
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d) => {
+    (async () => {
+      try {
+        const r = await authClient.me.$get();
+        const d = (await r.json()) as {
+          user?: { name?: string; email?: string; phone?: string } | null;
+          defaultAddress?: {
+            address?: string;
+            city?: string;
+            postcode?: string;
+          } | null;
+        };
         if (!d?.user) return;
         setForm((f) => ({
           ...f,
-          customerName: f.customerName || d.user.name || "",
-          email: f.email || d.user.email || "",
-          phone: f.phone || d.user.phone || "",
+          customerName: f.customerName || d.user?.name || "",
+          email: f.email || d.user?.email || "",
+          phone: f.phone || d.user?.phone || "",
           address: f.address || d.defaultAddress?.address || "",
           city: f.address ? f.city : d.defaultAddress?.city || f.city,
           postcode: f.postcode || d.defaultAddress?.postcode || "",
         }));
-      })
-      .catch(() => {});
+      } catch {
+        // not logged in or unreachable — checkout works as guest
+      }
+    })();
   }, []);
 
   // Gateway return errors (?error=payment-failed|cancelled) — derived during
@@ -108,14 +124,17 @@ function CheckoutForm() {
   // District-based delivery fee; falls back to the flat rule on error.
   // (The previous quote stays visible while the new one loads.)
   useEffect(() => {
-    fetch(
-      `/api/shipping?city=${encodeURIComponent(form.city)}&subtotal=${discounted}`
-    )
-      .then((r) => r.json())
-      .then((d) => {
+    (async () => {
+      try {
+        const r = await shippingClient.quote.$get({
+          query: { city: form.city, subtotal: String(discounted) },
+        });
+        const d = (await r.json()) as { shipping?: number };
         if (typeof d?.shipping === "number") setZoneShipping(d.shipping);
-      })
-      .catch(() => {});
+      } catch {
+        // falls back to the flat rule
+      }
+    })();
   }, [form.city, discounted]);
 
   const shipping = zoneShipping ?? shippingFor(discounted);
@@ -125,20 +144,22 @@ function CheckoutForm() {
     if (!couponCode.trim()) return;
     setCouponMsg(null);
     try {
-      const res = await fetch("/api/coupons/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponCode, subtotal }),
+      const res = await couponsClient.validate.$post({
+        json: { code: couponCode, subtotal },
       });
-      const body = await res.json().catch(() => ({}));
+      const body = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        code?: string;
+        discount?: number;
+      };
       if (!res.ok) {
-        setCouponMsg(typeof body?.error === "string" ? body.error : "Invalid coupon.");
+        setCouponMsg(body?.error ?? "Invalid coupon.");
         setDiscount(0);
         setAppliedCode(null);
         return;
       }
       setDiscount(body.discount ?? 0);
-      setAppliedCode(body.code);
+      setAppliedCode(body.code ?? couponCode.toUpperCase());
     } catch {
       setCouponMsg("Could not check coupon. Please try again.");
     }

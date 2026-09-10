@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { contactClient } from "@/lib/hono";
 
 export default function ContactForm() {
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -12,14 +13,10 @@ export default function ContactForm() {
     setStatus("sending");
     setError(null);
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const body = await res.json().catch(() => ({}));
+      const res = await contactClient.index.$post({ json: form });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(typeof body?.error === "string" ? body.error : "Could not send. Please try again.");
+        setError(body?.error ?? "Could not send. Please try again.");
         setStatus("error");
         return;
       }
