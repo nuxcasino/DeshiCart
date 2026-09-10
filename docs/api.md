@@ -294,6 +294,24 @@ changes never rewrite history. Storefront cards show "From ৳X" floors.
 
 ---
 
+## Product images (ImageKit CDN)
+
+Binaries live on ImageKit; `product_images` keeps URL + fileId + dimensions +
+alt + position + primary. Every mutation re-syncs the legacy `products.images`
+array, so the storefront works unchanged. App code depends only on the
+`ImageStorageProvider` interface (`src/lib/images/`) — swapping CDN vendors
+needs a new implementation, not a rewrite.
+
+- **`POST /api/admin/images`** — multipart `productId` + files (JPEG/PNG/WebP,
+  ≤5 MB, ≤10/product). Uploads server-side (private key never leaves the
+  server). → `201 { images }`.
+- **`PATCH /api/admin/images/[id]`** — `{ alt?, position?, isPrimary? }`.
+- **`DELETE /api/admin/images/[id]`** — removes the CDN file (best-effort) +
+  row, promotes the next primary, re-syncs.
+- Page: product edit → Images section (upload, reorder, primary, alt, delete).
+
+---
+
 ## Locations & location shipping
 
 Master data (8 divisions, 64 districts, 495 upazilas with EN+BN names) is seeded

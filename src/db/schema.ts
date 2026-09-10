@@ -331,6 +331,30 @@ export const productVariants = pgTable(
 
 export type ProductVariant = typeof productVariants.$inferSelect;
 
+// Product image metadata (§20). Binaries live on the CDN (ImageKit); the DB
+// keeps URL + provider metadata. `products.images` (legacy string array) is
+// kept in sync as the display source, so the storefront needs no changes.
+export const productImages = pgTable(
+  "product_images",
+  {
+    id: serial("id").primaryKey(),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    fileId: text("file_id").notNull().default(""),
+    width: integer("width"),
+    height: integer("height"),
+    alt: text("alt").notNull().default(""),
+    position: integer("position").notNull().default(0),
+    isPrimary: boolean("is_primary").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("product_images_product_id_idx").on(t.productId)]
+);
+
+export type ProductImage = typeof productImages.$inferSelect;
+
 export const returnRequests = pgTable("return_requests", {
   id: serial("id").primaryKey(),
   orderId: integer("order_id")

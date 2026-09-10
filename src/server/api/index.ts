@@ -25,6 +25,7 @@ import adminReturns from "./admin/returns";
 import adminVariants from "./admin/variants";
 import adminShippingRules from "./admin/shipping-rules";
 import adminGateways from "./admin/gateways";
+import adminImages from "./admin/images";
 
 // Hono API boundary (§7). Routers live per-domain with Zod-validated inputs;
 // business logic stays in the service layer (src/lib/*), unchanged.
@@ -56,7 +57,8 @@ const app = new Hono()
   .route("/admin/returns", adminReturns)
   .route("/admin/variants", adminVariants)
   .route("/admin/shipping-rules", adminShippingRules)
-  .route("/admin/gateways", adminGateways);
+  .route("/admin/gateways", adminGateways)
+  .route("/admin/images", adminImages);
 
 app.onError((err, c) => {
   if (err instanceof AppError) {

@@ -82,3 +82,10 @@ works normally.
 - Used only server-side to encrypt gateway credentials in the database.
 - Without it: checkout still works (SSLCommerz sandbox via `SSLCZ_*` env), but
   saving credentials in `/admin/payment-gateways` is refused with a clear error.
+
+## `IMAGEKIT_PUBLIC_KEY` / `IMAGEKIT_PRIVATE_KEY` / `IMAGEKIT_URL_ENDPOINT`
+
+- Product image CDN. The private key is used only by the server upload route
+  (`POST /api/admin/images`) — never sent to the browser.
+- Without them: uploads are refused with a clear message; the storefront keeps
+  serving legacy image URLs.
