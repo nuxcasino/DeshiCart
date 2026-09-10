@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { ordersClient, paymentsClient } from "@/lib/hono";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
 
@@ -161,24 +162,29 @@ function CheckoutForm() {
     setErrorMessage(null);
     const isOnline = paymentMethod === "sslcommerz";
     try {
-      const res = await fetch(isOnline ? "/api/payments/init" : "/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          paymentMethod,
-          couponCode: appliedCode,
-          items: items.map((i) => ({
-            productId: i.productId,
-            size: i.size,
-            quantity: i.quantity,
-          })),
-        }),
-      });
+      // Typed RPC payloads: request shapes are checked against the Zod
+      // schemas; only the response union needs a light cast below.
+      const payload = {
+        ...form,
+        paymentMethod,
+        couponCode: appliedCode ?? "",
+        items: items.map((i) => ({
+          productId: i.productId,
+          size: i.size,
+          quantity: i.quantity,
+        })),
+      };
+      const res = isOnline
+        ? await paymentsClient.init.$post({ json: payload })
+        : await ordersClient.index.$post({ json: payload });
       if (!res.ok) {
         let message = "Something went wrong placing your order. Please try again.";
         try {
-          const body = await res.json();
+          // Error shapes union across endpoints; only these fields matter here.
+          const body = (await res.json()) as {
+            error?: string;
+            items?: Array<{ name: string; available: number }>;
+          };
           if (Array.isArray(body?.items) && body.items.length > 0) {
             message =
               "Some items don't have enough stock: " +
@@ -197,7 +203,12 @@ function CheckoutForm() {
         setErrorMessage(message);
         throw new Error("failed");
       }
-      const data = await res.json();
+      const data = (await res.json()) as {
+        orderId?: number;
+        gatewayUrl?: string;
+        error?: string;
+        items?: Array<{ name: string; available: number }>;
+      };
       if (isOnline) {
         if (!data.gatewayUrl || !data.orderId) {
           setErrorMessage("Could not start online payment. Please try again.");

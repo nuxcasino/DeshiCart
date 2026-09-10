@@ -10,6 +10,7 @@ import {
   isRateLimited,
   rateLimitedResponse,
 } from "@/lib/ratelimit";
+import { validationHook } from "../validate";
 
 const createReview = z.object({
   productId: z.number().int().positive(),
@@ -19,7 +20,7 @@ const createReview = z.object({
   body: z.string().trim().min(1).max(2000),
 });
 
-const app = new Hono().post("/", zValidator("json", createReview), async (c) => {
+const app = new Hono().post("/", zValidator("json", createReview, validationHook), async (c) => {
   if (isRateLimited(`reviews:${clientIp(c.req.raw)}`, 5, 60_000)) {
     return rateLimitedResponse();
   }

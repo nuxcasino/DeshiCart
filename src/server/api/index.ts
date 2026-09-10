@@ -4,6 +4,8 @@ import health from "./health";
 import categories from "./categories";
 import products from "./products";
 import reviews from "./reviews";
+import orders from "./orders";
+import payments from "./payments";
 
 // Hono API boundary (§7). Routers live per-domain with Zod-validated inputs;
 // business logic stays in the service layer (src/lib/*), unchanged.
@@ -14,7 +16,9 @@ const app = new Hono()
   .route("/health", health)
   .route("/categories", categories)
   .route("/products", products)
-  .route("/reviews", reviews);
+  .route("/reviews", reviews)
+  .route("/orders", orders)
+  .route("/payments", payments);
 
 app.onError((err, c) => {
   if (err instanceof AppError) {

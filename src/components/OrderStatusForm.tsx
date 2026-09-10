@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { Order } from "@/db/schema";
+import { paymentsClient } from "@/lib/hono";
 
 const STATUSES = ["pending", "confirmed", "shipped", "delivered", "cancelled"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "cancelled", "refunded"];
@@ -44,12 +45,13 @@ export default function OrderStatusForm({ order }: { order: Order }) {
     setSaving(true);
     setMessage(null);
     try {
-      const res = await fetch("/api/payments/reconcile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tranId: order.transactionId }),
+      const res = await paymentsClient.reconcile.$post({
+        json: { tranId: order.transactionId },
       });
-      const body = await res.json().catch(() => ({}));
+      // Success + Zod-error shapes union; only outcome matters here.
+      const body = (await res.json().catch(() => ({}))) as {
+        outcome?: string;
+      };
       setMessage(`Gateway says: ${body?.outcome ?? "unknown"}`);
       router.refresh();
     } finally {

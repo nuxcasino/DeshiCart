@@ -1,6 +1,8 @@
 import { hc } from "hono/client";
 import type { CategoriesRoute } from "@/server/api/categories";
 import type { HealthRoute } from "@/server/api/health";
+import type { OrdersRoute } from "@/server/api/orders";
+import type { PaymentsRoute } from "@/server/api/payments";
 import type { ProductsRoute } from "@/server/api/products";
 import type { ReviewsRoute } from "@/server/api/reviews";
 
@@ -11,3 +13,5 @@ export const healthClient = hc<HealthRoute>("/api/health");
 export const categoriesClient = hc<CategoriesRoute>("/api/categories");
 export const productsClient = hc<ProductsRoute>("/api/products");
 export const reviewsClient = hc<ReviewsRoute>("/api/reviews");
+export const ordersClient = hc<OrdersRoute>("/api/orders");
+export const paymentsClient = hc<PaymentsRoute>("/api/payments");

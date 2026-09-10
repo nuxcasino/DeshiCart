@@ -8,6 +8,7 @@ import {
   type SortKey,
 } from "@/lib/data";
 import { NotFoundError } from "../errors";
+import { validationHook } from "../validate";
 
 const listQuery = z.object({
   category: z.string().max(80).optional(),
@@ -19,7 +20,7 @@ const listQuery = z.object({
 });
 
 const app = new Hono()
-  .get("/", zValidator("query", listQuery), async (c) => {
+  .get("/", zValidator("query", listQuery, validationHook), async (c) => {
     const q = c.req.valid("query");
     if (q.featured === "true") {
       return c.json({ products: await getFeaturedProducts() });
