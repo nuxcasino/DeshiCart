@@ -8,15 +8,21 @@ export type SslcommerzConfig = {
   base: string;
 };
 
-export function getSslcommerzConfig(): SslcommerzConfig {
-  const storeId = process.env.SSLCZ_STORE_ID;
-  const storePassword = process.env.SSLCZ_STORE_PASSWORD;
+export function getSslcommerzConfig(overrides?: {
+  storeId?: string;
+  storePassword?: string;
+  sandbox?: boolean;
+}): SslcommerzConfig {
+  const storeId = overrides?.storeId || process.env.SSLCZ_STORE_ID;
+  const storePassword = overrides?.storePassword || process.env.SSLCZ_STORE_PASSWORD;
   if (!storeId || !storePassword) {
     throw new Error(
       "SSLCZ_STORE_ID / SSLCZ_STORE_PASSWORD are required for online payments"
     );
   }
-  const sandbox = (process.env.SSLCZ_SANDBOX ?? "true").toLowerCase() !== "false";
+  const sandbox =
+    overrides?.sandbox ??
+    (process.env.SSLCZ_SANDBOX ?? "true").toLowerCase() !== "false";
   return {
     storeId,
     storePassword,
@@ -49,9 +55,10 @@ export type InitPaymentInput = {
 
 /** Calls the Initiate Payment API. Returns the GatewayPageURL to redirect the customer to. */
 export async function initSslcommerzPayment(
-  input: InitPaymentInput
+  input: InitPaymentInput,
+  creds?: { storeId?: string; storePassword?: string; sandbox?: boolean }
 ): Promise<string> {
-  const cfg = getSslcommerzConfig();
+  const cfg = getSslcommerzConfig(creds);
   const params = new URLSearchParams({
     store_id: cfg.storeId,
     store_passwd: cfg.storePassword,
@@ -115,9 +122,10 @@ export type ValidationResult = {
 
 /** Server-side Order Validation API — the only trustworthy payment proof. */
 export async function validateSslcommerzTransaction(
-  valId: string
+  valId: string,
+  creds?: { storeId?: string; storePassword?: string; sandbox?: boolean }
 ): Promise<ValidationResult> {
-  const cfg = getSslcommerzConfig();
+  const cfg = getSslcommerzConfig(creds);
   const url =
     `${cfg.base}/validator/api/validationserverAPI.php` +
     `?val_id=${encodeURIComponent(valId)}` +

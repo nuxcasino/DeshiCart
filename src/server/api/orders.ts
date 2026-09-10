@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
 import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
 import { applyCoupon, releaseCoupon } from "@/lib/coupons";
+import { getAvailableGateways, isDirectGateway, logTransaction } from "@/lib/gateways";
 import { quoteShipping } from "@/lib/locations";
 import {
   releaseLines,
@@ -47,6 +48,21 @@ const app = new Hono().post("/", zValidator("json", createOrder, validationHook)
   }
   const input = c.req.valid("json");
 
+  // Direct payments only (COD-style). Redirect-kind gateways must go through
+  // /api/payments/init — posting them here would confirm unpaid orders.
+  const gateway = (await getAvailableGateways()).find(
+    (g) => g.key === (input.paymentMethod || "cod")
+  );
+  if (!gateway) {
+    return c.json({ error: "Payment method unavailable." }, 400);
+  }
+  if (!isDirectGateway(gateway.key)) {
+    return c.json(
+      { error: "This payment method needs the online checkout flow." },
+      400
+    );
+  }
+
   // Authoritative pricing: variants when present, else product rows.
   const { lineItems, insufficient } = await resolveCheckoutLines(input.items);
   if (!lineItems.length) {
@@ -85,6 +101,24 @@ const app = new Hono().post("/", zValidator("json", createOrder, validationHook)
     subtotal: subtotal - discount,
   });
 
+  const merchandise = subtotal - discount + shipping;
+  if (gateway.minAmount !== null && merchandise < gateway.minAmount) {
+    if (couponCode) await releaseCoupon(couponCode);
+    return c.json(
+      { error: `Minimum order for this payment method is ৳${gateway.minAmount.toLocaleString("en-IN")}.` },
+      400
+    );
+  }
+  if (gateway.maxAmount !== null && merchandise > gateway.maxAmount) {
+    if (couponCode) await releaseCoupon(couponCode);
+    return c.json(
+      { error: `Maximum order for this payment method is ৳${gateway.maxAmount.toLocaleString("en-IN")}.` },
+      400
+    );
+  }
+  const gatewayFee = gateway.extraFee;
+  const total = merchandise + gatewayFee;
+
   const sessionUser = await getSessionUserFromRequest(c.req.raw);
 
   const reserved = await reserveLines(lineItems);
@@ -115,7 +149,8 @@ const app = new Hono().post("/", zValidator("json", createOrder, validationHook)
         discount,
         couponCode,
         shipping,
-        total: subtotal - discount + shipping,
+        gatewayFee,
+        total,
       })
       .returning();
 
@@ -134,6 +169,12 @@ const app = new Hono().post("/", zValidator("json", createOrder, validationHook)
     );
 
     await notifyOrderPlaced(order, lineItems);
+    await logTransaction({
+      orderId: order.id,
+      gateway: input.paymentMethod,
+      amount: total,
+      status: "confirmed",
+    });
 
     return c.json({ orderId: order.id }, 201);
   } catch {

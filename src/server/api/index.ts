@@ -14,6 +14,7 @@ import wishlist from "./wishlist";
 import contact from "./contact";
 import returns from "./returns";
 import locations from "./locations";
+import paymentGateways from "./payment-gateways";
 import adminProducts from "./admin/products";
 import adminCategories from "./admin/categories";
 import adminOrders from "./admin/orders";
@@ -44,6 +45,7 @@ const app = new Hono()
   .route("/contact", contact)
   .route("/returns", returns)
   .route("/locations", locations)
+  .route("/payment-gateways", paymentGateways)
   .route("/admin/products", adminProducts)
   .route("/admin/categories", adminCategories)
   .route("/admin/orders", adminOrders)

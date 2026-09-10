@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { releaseLines } from "./checkout-lines";
+import { logTransaction, resolveSslcommerzCreds } from "./gateways";
 import { notifyPaymentReceived } from "./notify";
 import {
   querySslcommerzTransaction,
@@ -30,7 +31,7 @@ export async function settleOrderPayment(
     return { outcome: "paid", orderId: order.id };
   }
 
-  const fail = async (): Promise<SettleResult> => {
+  const fail = async (reason?: string): Promise<SettleResult> => {
     if (order.paymentStatus === "pending") {
       const items = await db
         .select()
@@ -42,16 +43,32 @@ export async function settleOrderPayment(
         .set({ paymentStatus: "failed", status: "cancelled" })
         .where(eq(orders.id, order.id));
     }
+    await logTransaction({
+      orderId: order.id,
+      gateway: order.paymentMethod,
+      tranRef: tranId,
+      status: "failed",
+      message: reason ?? null,
+    });
     return { outcome: "failed", orderId: order.id };
   };
 
-  if (!valId) return fail();
+  if (!valId) {
+    await logTransaction({
+      orderId: order.id,
+      gateway: order.paymentMethod,
+      tranRef: tranId,
+      status: "failed",
+      message: "Callback without val_id.",
+    });
+    return fail();
+  }
 
   let check;
   try {
-    check = await validateSslcommerzTransaction(valId);
+    check = await validateSslcommerzTransaction(valId, await resolveSslcommerzCreds());
   } catch {
-    return fail();
+    return fail("Validation API unreachable.");
   }
 
   const amountOk = Number.isFinite(check.amount)
@@ -63,7 +80,7 @@ export async function settleOrderPayment(
     check.currency !== "BDT" ||
     !amountOk
   ) {
-    return fail();
+    return fail(`Verification mismatch (status=${check.status}).`);
   }
 
   await db
@@ -78,6 +95,15 @@ export async function settleOrderPayment(
       storeAmount: check.storeAmount || null,
     })
     .where(eq(orders.id, order.id));
+  await logTransaction({
+    orderId: order.id,
+    gateway: order.paymentMethod,
+    tranRef: tranId,
+    gatewayRef: check.bankTranId || null,
+    amount: order.total,
+    status: "valid",
+    message: `risk=${check.riskLevel}`,
+  });
   await notifyPaymentReceived(order);
   return { outcome: "paid", orderId: order.id };
 }

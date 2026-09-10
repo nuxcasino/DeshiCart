@@ -8,11 +8,21 @@ import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
 import { applyCoupon, releaseCoupon } from "@/lib/coupons";
 import { quoteShipping } from "@/lib/locations";
 import {
+  getAvailableGateways,
+  isDirectGateway,
+  logTransaction,
+  resolveSslcommerzCreds,
+} from "@/lib/gateways";
+import {
+  ADAPTERS,
+  initSslcommerzProviderPayment,
+} from "@/lib/payments/adapters";
+import {
   releaseLines,
   reserveLines,
   resolveCheckoutLines,
 } from "@/lib/checkout-lines";
-import { getSiteUrl, initSslcommerzPayment } from "@/lib/sslcommerz";
+import { getSiteUrl } from "@/lib/sslcommerz";
 import { reconcileOrderPayment, settleOrderPayment } from "@/lib/payments";
 import {
   clientIp,
@@ -55,6 +65,24 @@ const app = new Hono()
     }
     const input = c.req.valid("json");
 
+    const method = input.paymentMethod || "sslcommerz";
+    const gateway = (await getAvailableGateways()).find((g) => g.key === method);
+    if (!gateway) {
+      return c.json({ error: "Payment method unavailable." }, 400);
+    }
+    if (isDirectGateway(method)) {
+      return c.json(
+        { error: "This payment method completes directly — no gateway needed." },
+        400
+      );
+    }
+    if (!ADAPTERS[method]) {
+      return c.json(
+        { error: "This payment method is not available yet." },
+        400
+      );
+    }
+
     const { lineItems, insufficient } = await resolveCheckoutLines(input.items);
 
     if (!lineItems.length) {
@@ -93,7 +121,24 @@ const app = new Hono()
       upazilaId: input.upazilaId || null,
       subtotal: subtotal - discount,
     });
-    const total = subtotal - discount + shipping;
+
+    const merchandise = subtotal - discount + shipping;
+    if (gateway.minAmount !== null && merchandise < gateway.minAmount) {
+      if (couponCode) await releaseCoupon(couponCode);
+      return c.json(
+        { error: `Minimum order for this payment method is ৳${gateway.minAmount.toLocaleString("en-IN")}.` },
+        400
+      );
+    }
+    if (gateway.maxAmount !== null && merchandise > gateway.maxAmount) {
+      if (couponCode) await releaseCoupon(couponCode);
+      return c.json(
+        { error: `Maximum order for this payment method is ৳${gateway.maxAmount.toLocaleString("en-IN")}.` },
+        400
+      );
+    }
+    const gatewayFee = gateway.extraFee;
+    const total = merchandise + gatewayFee;
 
     const reserved = await reserveLines(lineItems);
     if (!reserved.ok) {
@@ -106,6 +151,7 @@ const app = new Hono()
 
     const tranId = `DC-${Date.now()}`;
     let orderId: number;
+    let createdOrder: typeof orders.$inferSelect | null = null;
     try {
       const sessionUser = await getSessionUserFromRequest(c.req.raw);
       const [order] = await db
@@ -121,11 +167,12 @@ const app = new Hono()
           districtId: input.districtId || null,
           upazilaId: input.upazilaId || null,
           notes: input.notes || null,
-          paymentMethod: "sslcommerz",
+          paymentMethod: method,
           subtotal,
           discount,
           couponCode,
           shipping,
+          gatewayFee,
           total,
           status: "pending",
           paymentStatus: "pending",
@@ -133,6 +180,7 @@ const app = new Hono()
         })
         .returning();
       orderId = order.id;
+      createdOrder = order;
       await db.insert(orderItems).values(
         lineItems.map((li) => ({
           orderId: order.id,
@@ -153,20 +201,40 @@ const app = new Hono()
     }
 
     const siteUrl = getSiteUrl(c.req.raw);
+    if (!createdOrder) {
+      await releaseLines(lineItems);
+      if (couponCode) await releaseCoupon(couponCode);
+      return c.json({ error: "Could not start payment. Please try again." }, 500);
+    }
     try {
-      const gatewayUrl = await initSslcommerzPayment({
-        tranId,
-        total,
-        customerName: input.customerName,
-        email: input.email,
-        phone: input.phone,
-        address: input.address,
-        city: input.city,
-        postcode: input.postcode || "1200",
-        siteUrl,
-        productNames: lineItems.map((li) => li.name).join(", "),
+      const adapter = ADAPTERS[method];
+      const initiated = await adapter.initPayment(
+        {
+          order: createdOrder,
+          siteUrl,
+          customer: {
+            name: input.customerName,
+            email: input.email,
+            phone: input.phone,
+            address: input.address,
+            city: input.city,
+            postcode: input.postcode || "1200",
+          },
+          productNames: lineItems.map((li) => li.name).join(", "),
+        },
+        await resolveSslcommerzCreds()
+      );
+      if (initiated.kind !== "redirect") {
+        throw new Error("Provider did not return a payment page.");
+      }
+      await logTransaction({
+        orderId,
+        gateway: method,
+        tranRef: tranId,
+        amount: total,
+        status: "initiated",
       });
-      return c.json({ orderId, gatewayUrl });
+      return c.json({ orderId, gatewayUrl: initiated.gatewayUrl });
     } catch (error) {
       await releaseLines(lineItems);
       if (couponCode) await releaseCoupon(couponCode);

@@ -118,6 +118,12 @@ export default async function OrderPage({
               <span className="font-semibold text-leaf">−{formatBDT(order.discount)}</span>
             </div>
           )}
+          {order.gatewayFee > 0 && (
+            <div className="flex justify-between">
+              <span className="text-ink-soft">Payment fee</span>
+              <span className="font-semibold">{formatBDT(order.gatewayFee)}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-ink-soft">Delivery</span>
             <span className="font-semibold">

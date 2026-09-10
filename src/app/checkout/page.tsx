@@ -9,6 +9,7 @@ import {
   couponsClient,
   locationsClient,
   ordersClient,
+  paymentGatewaysClient,
   paymentsClient,
   shippingClient,
 } from "@/lib/hono";
@@ -16,20 +17,56 @@ import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
 import type { District, Division, Upazila } from "@/db/schema";
 
-const paymentMethods = [
+type GatewayOption = {
+  key: string;
+  displayName: string;
+  currency: string;
+  extraFee: number;
+  minAmount: number | null;
+  maxAmount: number | null;
+  sandbox: boolean;
+  kind: "direct" | "redirect";
+};
+
+const FALLBACK_METHODS: GatewayOption[] = [
   {
-    id: "cod",
-    label: "Cash on Delivery",
-    desc: "Pay when your order arrives",
-    icon: "💵",
+    key: "cod",
+    displayName: "Cash on Delivery",
+    currency: "BDT",
+    extraFee: 0,
+    minAmount: null,
+    maxAmount: null,
+    sandbox: false,
+    kind: "direct",
   },
   {
-    id: "sslcommerz",
-    label: "Online Payment",
-    desc: "bKash, Nagad, cards & more",
-    icon: "🌐",
+    key: "sslcommerz",
+    displayName: "Online Payment",
+    currency: "BDT",
+    extraFee: 0,
+    minAmount: null,
+    maxAmount: null,
+    sandbox: true,
+    kind: "redirect",
   },
 ];
+
+const GATEWAY_ICONS: Record<string, string> = {
+  cod: "💵",
+  sslcommerz: "🌐",
+  bkash: "📱",
+  nagad: "🟠",
+  stripe: "💳",
+};
+
+function gatewayDesc(g: GatewayOption): string {
+  const parts: string[] = [];
+  if (g.key === "cod") parts.push("Pay when your order arrives");
+  else parts.push("bKash, Nagad, cards & more");
+  if (g.extraFee > 0) parts.push(`+${formatBDT(g.extraFee)} fee`);
+  if (g.sandbox && g.kind === "redirect") parts.push("test mode");
+  return parts.join(" · ");
+}
 
 export default function CheckoutPage() {
   return (
@@ -63,6 +100,7 @@ function CheckoutForm() {
     notes: "",
   });
   const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [methods, setMethods] = useState<GatewayOption[]>(FALLBACK_METHODS);
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [divisions, setDivisions] = useState<Division[]>([]);
@@ -178,6 +216,27 @@ function CheckoutForm() {
 
   const discounted = Math.max(0, subtotal - discount);
 
+  // Available payment methods come from the gateway registry (admin-managed).
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await paymentGatewaysClient.index.$get();
+        const d = (await r.json()) as { gateways?: GatewayOption[] };
+        if (d.gateways && d.gateways.length > 0) {
+          setMethods(d.gateways);
+          setPaymentMethod((prev) =>
+            d.gateways!.some((g) => g.key === prev) ? prev : d.gateways![0].key
+          );
+        }
+      } catch {
+        // static fallback stays
+      }
+    })();
+  }, []);
+
+  const selectedMethod = methods.find((m) => m.key === paymentMethod) ?? methods[0];
+  const gatewayFee = selectedMethod?.extraFee ?? 0;
+
   // Location-aware delivery fee; falls back through city zones to flat rule.
   // (The previous quote stays visible while the new one loads.)
   useEffect(() => {
@@ -201,7 +260,7 @@ function CheckoutForm() {
   }, [form.city, form.divisionId, form.districtId, form.upazilaId, discounted]);
 
   const shipping = zoneShipping ?? shippingFor(discounted);
-  const total = discounted + shipping;
+  const total = discounted + shipping + gatewayFee;
 
   const applyCouponCode = async () => {
     if (!couponCode.trim()) return;
@@ -244,7 +303,7 @@ function CheckoutForm() {
     if (items.length === 0) return;
     setStatus("sending");
     setErrorMessage(null);
-    const isOnline = paymentMethod === "sslcommerz";
+    const isOnline = (selectedMethod?.kind ?? "direct") === "redirect";
     try {
       // Typed RPC payloads: request shapes are checked against the Zod
       // schemas; only the response union needs a light cast below.
@@ -521,25 +580,32 @@ function CheckoutForm() {
           <section className="rounded-xl border border-sand bg-white p-6 sm:p-7">
             <h2 className="font-display text-lg font-semibold">3 · Payment</h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {paymentMethods.map((pm) => (
+              {methods.map((pm) => (
                 <button
                   type="button"
-                  key={pm.id}
-                  onClick={() => setPaymentMethod(pm.id)}
+                  key={pm.key}
+                  onClick={() => setPaymentMethod(pm.key)}
                   className={`rounded-xl border p-4 text-left transition-all ${
-                    paymentMethod === pm.id
+                    paymentMethod === pm.key
                       ? "border-ink bg-ink text-cream shadow-md"
                       : "border-sand bg-white hover:border-clay"
                   }`}
                 >
-                  <span className="text-xl">{pm.icon}</span>
-                  <p className="mt-2 text-sm font-bold">{pm.label}</p>
+                  <span className="text-xl">{GATEWAY_ICONS[pm.key] ?? "🏦"}</span>
+                  <p className="mt-2 text-sm font-bold">
+                    {pm.displayName}
+                    {pm.sandbox && pm.kind === "redirect" && (
+                      <span className="ml-1.5 rounded-full bg-gold/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gold">
+                        Test
+                      </span>
+                    )}
+                  </p>
                   <p
                     className={`mt-0.5 text-xs ${
-                      paymentMethod === pm.id ? "text-cream/70" : "text-ink-soft"
+                      paymentMethod === pm.key ? "text-cream/70" : "text-ink-soft"
                     }`}
                   >
-                    {pm.desc}
+                    {gatewayDesc(pm)}
                   </p>
                 </button>
               ))}
@@ -642,6 +708,12 @@ function CheckoutForm() {
                   )}
                 </span>
               </div>
+              {gatewayFee > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-ink-soft">Payment fee</span>
+                  <span className="font-semibold">{formatBDT(gatewayFee)}</span>
+                </div>
+              )}
               <div className="flex justify-between border-t border-sand pt-3 text-base">
                 <span className="font-bold">Total</span>
                 <span className="font-display text-xl font-semibold">

@@ -89,6 +89,9 @@ function receiptHtml(
       ? `Discount${order.couponCode ? ` (${order.couponCode})` : ""}: −৳${order.discount.toLocaleString("en-IN")}<br/>`
       : "") +
     `Delivery: ${order.shipping === 0 ? "Free" : "৳" + order.shipping.toLocaleString("en-IN")}<br/>` +
+    (order.gatewayFee > 0
+      ? `Payment fee: ৳${order.gatewayFee.toLocaleString("en-IN")}<br/>`
+      : "") +
     `<strong>Total: ৳${order.total.toLocaleString("en-IN")}</strong></p>` +
     `<p>Delivering to: ${order.address}, ${order.city} · ${order.phone}</p>`
   );

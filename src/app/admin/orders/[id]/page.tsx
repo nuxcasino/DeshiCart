@@ -69,6 +69,9 @@ export default async function AdminOrderDetail({
               {order.discount > 0 && (
                 <div className="flex justify-between"><dt className="text-ink-soft">Discount{order.couponCode ? ` (${order.couponCode})` : ""}</dt><dd className="font-semibold">−{formatBDT(order.discount)}</dd></div>
               )}
+              {order.gatewayFee > 0 && (
+                <div className="flex justify-between"><dt className="text-ink-soft">Payment fee</dt><dd className="font-semibold">{formatBDT(order.gatewayFee)}</dd></div>
+              )}
               <div className="flex justify-between"><dt className="text-ink-soft">Shipping</dt><dd className="font-semibold">{order.shipping === 0 ? "Free" : formatBDT(order.shipping)}</dd></div>
               <div className="flex justify-between text-base"><dt className="font-bold">Total</dt><dd className="font-display font-semibold">{formatBDT(order.total)}</dd></div>
             </dl>

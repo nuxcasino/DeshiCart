@@ -69,11 +69,12 @@ export const orders = pgTable(
   upazilaId: text("upazila_id"),
   notes: text("notes"),
     paymentMethod: text("payment_method").notNull(),
-    subtotal: integer("subtotal").notNull(),
-    discount: integer("discount").notNull().default(0),
-    couponCode: text("coupon_code"),
-    shipping: integer("shipping").notNull(),
-    total: integer("total").notNull(),
+  subtotal: integer("subtotal").notNull(),
+  discount: integer("discount").notNull().default(0),
+  couponCode: text("coupon_code"),
+  shipping: integer("shipping").notNull(),
+  gatewayFee: integer("gateway_fee").notNull().default(0),
+  total: integer("total").notNull(),
     status: text("status").notNull().default("confirmed"),
     paymentStatus: text("payment_status").notNull().default("pending"),
     transactionId: text("transaction_id"),
@@ -248,6 +249,51 @@ export type Division = typeof divisions.$inferSelect;
 export type District = typeof districts.$inferSelect;
 export type Upazila = typeof upazilas.$inferSelect;
 export type ShippingRule = typeof shippingRules.$inferSelect;
+
+// Payment gateway registry (§§22-23). Public config lives here; secret
+// credentials are AES-GCM encrypted (see lib/payment-security.ts) and NEVER
+// exposed through public endpoints.
+export const paymentGateways = pgTable("payment_gateways", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  enabled: boolean("enabled").notNull().default(true),
+  sandbox: boolean("sandbox").notNull().default(true),
+  currency: text("currency").notNull().default("BDT"),
+  minAmount: integer("min_amount"),
+  maxAmount: integer("max_amount"),
+  extraFee: integer("extra_fee").notNull().default(0),
+  priority: integer("priority").notNull().default(0),
+  maintenance: boolean("maintenance").notNull().default(false),
+  credentials: text("credentials").notNull().default(""),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// Payment attempt ledger (§25). One row per init/callback/validation event.
+// Idempotency comes from orders.paymentStatus checks; this table is the audit
+// trail. Never stores card data or secrets.
+export const paymentTransactions = pgTable(
+  "payment_transactions",
+  {
+    id: serial("id").primaryKey(),
+    orderId: integer("order_id").references(() => orders.id),
+    gateway: text("gateway").notNull(),
+    tranRef: text("tran_ref"),
+    gatewayRef: text("gateway_ref"),
+    amount: integer("amount"),
+    currency: text("currency").notNull().default("BDT"),
+    status: text("status").notNull(),
+    message: text("message"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("payment_transactions_order_id_idx").on(t.orderId),
+    index("payment_transactions_tran_ref_idx").on(t.tranRef),
+  ]
+);
+
+export type PaymentGateway = typeof paymentGateways.$inferSelect;
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
 
 export const productVariants = pgTable(
   "product_variants",
