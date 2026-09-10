@@ -29,6 +29,27 @@ The application uses exactly **one** environment variable. It is referenced in
 - Only referenced to skip dev-only connection-pool caching. You do not need to set
   it manually.
 
+## `SSLCZ_STORE_ID` / `SSLCZ_STORE_PASSWORD` — required for online payments
+
+- **Purpose:** SSLCommerz merchant credentials for the "Online Payment" checkout
+  method (init + server-side transaction validation).
+- **Sandbox:** `.env.example` ships SSLCommerz's public demo credentials
+  (`testbox` / `qwerty`) — safe to use for testing, never for real money.
+- **Production:** replace with your store credentials and set `SSLCZ_SANDBOX="false"`.
+
+## `SSLCZ_SANDBOX` — optional (defaults to `"true"`)
+
+- `"true"` → `https://sandbox.sslcommerz.com`; `"false"` → live
+  `https://securepay.sslcommerz.com`. Any value other than `"false"` (case-insensitive)
+  means sandbox — so production must set it explicitly to `"false"`.
+
+## `SITE_URL` — optional
+
+- Absolute site URL used to build SSLCommerz `success/fail/cancel/ipn` callback
+  URLs. If unset, the app falls back to the incoming request's host (correct on
+  Vercel by default). Set it explicitly when using a custom domain.
+- Example: `SITE_URL="https://deshi-cart.vercel.app"`
+
 ## Secret hygiene
 
 - Never commit `.env`. Never paste credentials into docs, issues, or chat.

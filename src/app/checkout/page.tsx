@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
 
@@ -27,22 +27,31 @@ const paymentMethods = [
     icon: "💵",
   },
   {
-    id: "bkash",
-    label: "bKash",
-    desc: "Pay securely with bKash",
-    icon: "📱",
-  },
-  {
-    id: "card",
-    label: "Card",
-    desc: "Visa, Mastercard & Amex",
-    icon: "💳",
+    id: "sslcommerz",
+    label: "Online Payment",
+    desc: "bKash, Nagad, cards & more",
+    icon: "🌐",
   },
 ];
 
 export default function CheckoutPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+          <p className="text-sm text-ink-soft">Loading checkout…</p>
+        </div>
+      }
+    >
+      <CheckoutForm />
+    </Suspense>
+  );
+}
+
+function CheckoutForm() {
   const { items, subtotal, clearCart } = useCart();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [form, setForm] = useState({
     customerName: "",
@@ -56,6 +65,16 @@ export default function CheckoutPage() {
   const [status, setStatus] = useState<"idle" | "sending" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Gateway return errors (?error=payment-failed|cancelled) — derived during
+  // render so no effect-sync is needed. The bag is kept intact on return.
+  const urlError = searchParams.get("error");
+  const urlErrorMessage =
+    urlError === "payment-failed"
+      ? "Online payment failed or could not be verified. Your bag is kept as-is — please try again or choose Cash on Delivery."
+      : urlError === "payment-cancelled"
+        ? "Online payment was cancelled. Your bag is kept as-is — please try again or choose Cash on Delivery."
+        : null;
+
   const shipping = shippingFor(subtotal);
   const total = subtotal + shipping;
 
@@ -68,8 +87,9 @@ export default function CheckoutPage() {
     if (items.length === 0) return;
     setStatus("sending");
     setErrorMessage(null);
+    const isOnline = paymentMethod === "sslcommerz";
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch(isOnline ? "/api/payments/init" : "/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -104,9 +124,27 @@ export default function CheckoutPage() {
         setErrorMessage(message);
         throw new Error("failed");
       }
-      const { orderId } = await res.json();
+      const data = await res.json();
+      if (isOnline) {
+        if (!data.gatewayUrl || !data.orderId) {
+          setErrorMessage("Could not start online payment. Please try again.");
+          throw new Error("failed");
+        }
+        // Keep the bag intact until the gateway confirms; the order page
+        // clears it once payment succeeds (see ClearCartOnSuccess).
+        try {
+          window.sessionStorage.setItem(
+            "deshicart:pending-order",
+            String(data.orderId)
+          );
+        } catch {
+          // session storage may be unavailable
+        }
+        window.location.href = data.gatewayUrl;
+        return;
+      }
       clearCart();
-      router.push(`/order/${orderId}`);
+      router.push(`/order/${data.orderId}`);
     } catch {
       setStatus("error");
     }
@@ -268,7 +306,8 @@ export default function CheckoutPage() {
               ))}
             </div>
             <p className="mt-4 text-xs text-ink-soft">
-              This is a demo storefront — no real payment will be processed.
+              Cash on Delivery orders are confirmed instantly. Online payments
+              are processed securely via SSLCommerz (bKash, Nagad, cards).
             </p>
           </section>
         </div>
@@ -329,9 +368,10 @@ export default function CheckoutPage() {
                 </span>
               </div>
             </div>
-            {status === "error" && (
+            {(status === "error" || urlErrorMessage) && (
               <p className="mt-4 text-sm font-semibold text-clay">
                 {errorMessage ??
+                  urlErrorMessage ??
                   "Something went wrong placing your order. Please try again."}
               </p>
             )}

@@ -2,7 +2,8 @@
 
 DeshiCart is a full-stack fashion e-commerce storefront: browse a curated catalog
 of t-shirts, shirts, women's wear and accessories, filter and search, manage a
-cart, check out as a guest (COD / bKash / card), and leave product reviews.
+cart, check out as a guest (Cash on Delivery or online payment via SSLCommerz),
+and leave product reviews.
 Prices are in Bangladeshi Taka (৳).
 
 ## Features

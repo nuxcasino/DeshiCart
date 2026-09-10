@@ -109,6 +109,44 @@ Adds a review to a product and refreshes the product's denormalized `rating`
 
 ---
 
+## Online payments (SSLCommerz)
+
+Checkout offers Cash on Delivery (direct `POST /api/orders`, confirmed immediately)
+and **Online Payment** (`paymentMethod: "sslcommerz"`), which flows through:
+
+```text
+POST /api/payments/init  →  { orderId, gatewayUrl }  →  redirect customer
+   →  gateway callbacks  →  success: /order/[id]  ·  fail/cancel: /checkout?error=…
+```
+
+The pending order is created with `status: "pending"`, `paymentStatus: "pending"`
+and a generated `transactionId`; stock is reserved at init and released if payment
+fails, is cancelled, or can't be verified. Only the server-side Order Validation
+API (`val_id` check: status `VALID`/`VALIDATED`, matching `tran_id`, `BDT`
+currency, exact amount) marks an order `paid` — callback parameters alone are
+never trusted.
+
+### `POST /api/payments/init`
+
+Same body as `POST /api/orders` (items + contact/address; `paymentMethod` is
+forced to `"sslcommerz"` server-side).
+
+- **Response `200`:** `{ "orderId": 42, "gatewayUrl": "https://sandbox.sslcommerz.com/…" }`
+- **Errors:** same `400`/`409` stock errors as `/api/orders`, plus
+  `502 { "error": "…" }` when the gateway can't be reached (pending order is
+  cancelled and stock released).
+
+### `POST /api/payments/success` · `/fail` · `/cancel` · `/ipn`
+
+Form-posted (`tran_id`, `val_id`, …) by SSLCommerz. `success` settles via
+`settleOrderPayment()` and 303-redirects to `/order/[id]` (paid) or
+`/checkout?error=payment-failed`; `fail`/`cancel` release stock and redirect to
+`/checkout?error=payment-failed|cancelled`. `ipn` is the server-to-server
+variant: same verification, JSON `{ "ok": true/false }`, idempotent.
+
+- Sources: `src/app/api/payments/*/route.ts`, `src/lib/sslcommerz.ts`,
+  `src/lib/payments.ts`, `src/lib/stock.ts`
+
 ## Non-API server reads (for frontend developers)
 
 These are not HTTP endpoints — pages query the DB directly via `src/lib/data.ts`:

@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { orderItems, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { formatBDT } from "@/lib/format";
+import ClearCartOnSuccess from "@/components/ClearCartOnSuccess";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,14 @@ export default async function OrderPage({
     order.paymentMethod === "bkash"
       ? "bKash"
       : order.paymentMethod === "card"
-      ? "Card"
-      : "Cash on Delivery";
+        ? "Card"
+        : order.paymentMethod === "sslcommerz"
+          ? "Online Payment"
+          : "Cash on Delivery";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <ClearCartOnSuccess orderId={order.id} />
       <div className="text-center animate-fade-up">
         <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-leaf/10 text-4xl">
           🎉
@@ -96,7 +100,14 @@ export default async function OrderPage({
           </div>
           <div className="flex justify-between">
             <span className="text-ink-soft">Payment</span>
-            <span className="font-semibold">{paymentLabel}</span>
+            <span className="font-semibold">
+              {paymentLabel}
+              {order.paymentStatus === "paid" && (
+                <span className="ml-2 rounded-full bg-leaf/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-leaf">
+                  Paid
+                </span>
+              )}
+            </span>
           </div>
           <div className="flex justify-between border-t border-sand pt-3 text-base">
             <span className="font-bold">Total</span>

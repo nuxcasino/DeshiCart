@@ -25,6 +25,9 @@ Apply to **Production** and **Preview** (and Development if you use `vercel dev`
 | Variable | Required | Value |
 |---|---|---|
 | `DATABASE_URL` | Yes | Pooled Postgres connection string, e.g. Neon's `-pooler` URL with `?sslmode=require` |
+| `SSLCZ_STORE_ID` / `SSLCZ_STORE_PASSWORD` | For online payments | SSLCommerz credentials (sandbox demo values work for testing; live creds for real money) |
+| `SSLCZ_SANDBOX` | Recommended | `"true"` for testing, `"false"` for live payments (defaults to `"true"`) |
+| `SITE_URL` | Optional | Absolute site URL for gateway callbacks (falls back to request host) |
 
 Details and rotation guidance: [environment.md](environment.md).
 
