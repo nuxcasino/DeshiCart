@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         .where(
           and(eq(products.id, li.productId), gte(products.stock, li.quantity))
         )
-        .returning({ id: products.id });
+        .returning();
       if (updated.length === 0) {
         for (const done of reserved) {
           await db
