@@ -3,7 +3,7 @@ import Image from "next/image";
 import { getCategories, getFeaturedProducts } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo } from "@/lib/variants";
-import { isLocale, lp } from "@/lib/locale";
+import { isLocale, lp, pick } from "@/lib/locale";
 import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
@@ -140,7 +140,7 @@ export default async function HomePage({
               <div className="relative aspect-[3/4] overflow-hidden">
                 <Image
                   src={cat.image}
-                  alt={cat.name}
+                  alt={pick(lang, cat, "name")}
                   fill
                   sizes="(max-width: 1024px) 50vw, 25vw"
                   className="img-zoom object-cover"
@@ -149,9 +149,9 @@ export default async function HomePage({
               <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-5">
                 <h3 className="font-display text-xl font-semibold text-cream sm:text-2xl">
-                  {cat.name}
+                  {pick(lang, cat, "name")}
                 </h3>
-                <p className="mt-1 text-xs text-cream/70">{cat.tagline}</p>
+                <p className="mt-1 text-xs text-cream/70">{pick(lang, cat, "tagline")}</p>
                 <span className="mt-3 inline-block text-xs font-bold uppercase tracking-wider text-gold opacity-0 transition-all duration-300 group-hover:opacity-100">
                   Shop now →
                 </span>

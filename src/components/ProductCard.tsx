@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { Product } from "@/db/schema";
 import { formatBDT } from "@/lib/format";
 import type { CardVariantInfo } from "@/lib/variants";
-import { lp, type Locale } from "@/lib/locale";
+import { lp, pick, type Locale } from "@/lib/locale";
 import Stars from "./Stars";
 import QuickAddButton from "./QuickAddButton";
 import WishlistButton from "./WishlistButton";
@@ -21,6 +21,7 @@ export default function ProductCard({
 }) {
   const hasVariants = (variantInfo?.floor ?? null) !== null;
   const displayPrice = variantInfo?.floor ?? product.price;
+  const displayName = pick(lang, product, "name");
   const defaultVariant = variantInfo?.defaultVariant ?? null;
   const soldOut = hasVariants ? !defaultVariant : product.stock <= 0;
   const discount =
@@ -39,7 +40,7 @@ export default function ProductCard({
         <div className="relative aspect-[3/4] overflow-hidden">
           <Image
             src={product.images[0]}
-            alt={product.name}
+            alt={displayName}
             fill
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             className="img-zoom object-cover"
@@ -122,7 +123,7 @@ export default function ProductCard({
         </div>
         <Link href={lp(lang, `/product/${product.slug}`)}>
           <h3 className="mt-1 text-sm font-semibold leading-snug transition-colors group-hover:text-clay">
-            {product.name}
+            {displayName}
           </h3>
         </Link>
         <div className="mt-1 flex items-baseline gap-2">

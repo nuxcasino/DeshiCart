@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { Category } from "@/db/schema";
+import { pick, type Locale } from "@/lib/locale";
 
 const priceRanges = [
   { label: "Any price", value: "" },
@@ -20,7 +21,13 @@ const sortOptions = [
   { label: "Top Rated", value: "rating" },
 ];
 
-export default function FiltersBar({ categories }: { categories: Category[] }) {
+export default function FiltersBar({
+  categories,
+  lang,
+}: {
+  categories: Category[];
+  lang: Locale;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -53,7 +60,7 @@ export default function FiltersBar({ categories }: { categories: Category[] }) {
     <div className="space-y-4">
       {/* Category pills */}
       <div className="flex flex-wrap items-center gap-2">
-        {[{ id: 0, name: "All", slug: "all" }, ...categories].map((cat) => (
+        {[{ id: 0, name: "All", nameBn: "সব", slug: "all" }, ...categories].map((cat) => (
           <button
             key={cat.slug}
             onClick={() => setParam("category", cat.slug)}
@@ -63,7 +70,7 @@ export default function FiltersBar({ categories }: { categories: Category[] }) {
                 : "border border-sand bg-white text-ink-soft hover:border-clay hover:text-clay"
             }`}
           >
-            {cat.name}
+            {pick(lang, cat, "name")}
           </button>
         ))}
       </div>

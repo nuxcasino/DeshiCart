@@ -14,17 +14,22 @@ import {
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  nameBn: text("name_bn").notNull().default(""),
   slug: text("slug").notNull().unique(),
   tagline: text("tagline").notNull().default(""),
+  taglineBn: text("tagline_bn").notNull().default(""),
   image: text("image").notNull().default(""),
 });
 
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  nameBn: text("name_bn").notNull().default(""),
   slug: text("slug").notNull().unique(),
   description: text("description").notNull(),
+  descriptionBn: text("description_bn").notNull().default(""),
   details: jsonb("details").$type<string[]>().notNull().default([]),
+  detailsBn: jsonb("details_bn").$type<string[]>().notNull().default([]),
   price: integer("price").notNull(), // BDT
   compareAtPrice: integer("compare_at_price"),
   categoryId: integer("category_id")

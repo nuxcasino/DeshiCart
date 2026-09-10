@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getCategories, getShopProducts, type SortKey } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo } from "@/lib/variants";
-import { isLocale, lp } from "@/lib/locale";
+import { isLocale, lp, pick } from "@/lib/locale";
 import ProductCard from "@/components/ProductCard";
 import FiltersBar from "@/components/FiltersBar";
 import type { Metadata } from "next";
@@ -57,10 +57,10 @@ export default async function ShopPage({
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
       <div className="mb-8 animate-fade-up">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-          {activeCat ? activeCat.tagline : "The full collection"}
+          {activeCat ? pick(lang, activeCat, "tagline") : "The full collection"}
         </p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
-          {activeCat ? activeCat.name : "Shop All"}
+          {activeCat ? pick(lang, activeCat, "name") : "Shop All"}
         </h1>
         <p className="mt-2 text-sm text-ink-soft">
           {products.length} {products.length === 1 ? "style" : "styles"}
@@ -69,7 +69,7 @@ export default async function ShopPage({
       </div>
 
       <Suspense fallback={<div className="h-24" />}>
-        <FiltersBar categories={categories} />
+        <FiltersBar categories={categories} lang={lang} />
       </Suspense>
 
       {products.length === 0 ? (

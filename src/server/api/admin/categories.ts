@@ -18,8 +18,10 @@ function slugify(input: string): string {
 
 const createCategory = z.object({
   name: z.string().trim().min(1).max(80),
+  nameBn: z.string().trim().max(80).default(""),
   slug: z.string().trim().max(80).default(""),
   tagline: z.string().trim().max(160).default(""),
+  taglineBn: z.string().trim().max(160).default(""),
   image: z.string().trim().max(500).default(""),
 });
 
@@ -32,7 +34,7 @@ const app = new Hono()
     try {
       const [row] = await db
         .insert(categories)
-        .values({ name: input.name, slug, tagline: input.tagline, image: input.image })
+        .values({ name: input.name, nameBn: input.nameBn, slug, tagline: input.tagline, taglineBn: input.taglineBn, image: input.image })
         .returning();
       return c.json({ category: row }, 201);
     } catch (e) {

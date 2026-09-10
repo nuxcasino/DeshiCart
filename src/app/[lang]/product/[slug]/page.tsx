@@ -9,7 +9,7 @@ import {
 } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo, getProductVariants } from "@/lib/variants";
-import { isLocale, lp } from "@/lib/locale";
+import { isLocale, lp, pick, pickList } from "@/lib/locale";
 import { formatBDT } from "@/lib/format";
 import Gallery from "@/components/Gallery";
 import PurchasePanel from "@/components/PurchasePanel";
@@ -22,17 +22,20 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; lang: string }>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug, lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   const product = await getProductBySlug(slug).catch(() => null);
   if (!product) return {};
+  const name = pick(lang, product, "name");
+  const description = pick(lang, product, "description").slice(0, 160);
   return {
-    title: product.name,
-    description: product.description.slice(0, 160),
+    title: name,
+    description,
     openGraph: {
-      title: product.name,
-      description: product.description.slice(0, 160),
+      title: name,
+      description,
       images: product.images[0] ? [{ url: product.images[0] }] : undefined,
     },
   };
@@ -90,27 +93,27 @@ export default async function ProductPage({
               href={lp(lang, `/shop?category=${category.slug}`)}
               className="hover:text-clay transition-colors"
             >
-              {category.name}
+              {pick(lang, category, "name")}
             </Link>
           </>
         )}
         <span>/</span>
-        <span className="text-ink font-medium">{product.name}</span>
+        <span className="text-ink font-medium">{pick(lang, product, "name")}</span>
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
         <div className="animate-fade-up">
-          <Gallery images={product.images} name={product.name} badge={product.badge} />
+          <Gallery images={product.images} name={pick(lang, product, "name")} badge={product.badge} />
         </div>
 
         <div className="animate-fade-up" style={{ animationDelay: "0.1s" }}>
           {category && (
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-              {category.name}
+              {pick(lang, category, "name")}
             </p>
           )}
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            {product.name}
+            {pick(lang, product, "name")}
           </h1>
 
           <a href="#reviews" className="mt-3 flex items-center gap-2">
@@ -145,20 +148,20 @@ export default async function ProductPage({
           </div>
 
           <p className="mt-5 text-sm leading-relaxed text-ink-soft">
-            {product.description}
+            {pick(lang, product, "description")}
           </p>
 
           <div className="mt-7">
             <PurchasePanel product={product} variants={variants} />
           </div>
 
-          {product.details.length > 0 && (
+          {pickList(lang, product, "details").length > 0 && (
             <div className="mt-7 rounded-xl border border-sand bg-white p-5">
               <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">
                 Details & Care
               </p>
               <ul className="mt-3 space-y-2">
-                {product.details.map((d) => (
+                {pickList(lang, product, "details").map((d) => (
                   <li key={d} className="flex items-start gap-2.5 text-sm text-ink-soft">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-clay" />
                     {d}

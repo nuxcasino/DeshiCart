@@ -25,9 +25,12 @@ function parseList(input: unknown, sep: "," | "\n"): string[] {
 
 const productBody = z.object({
   name: z.string().trim().min(1).max(160),
+  nameBn: z.string().trim().max(160).default(""),
   slug: z.string().trim().max(160).default(""),
   description: z.string().trim().min(1).max(5000),
+  descriptionBn: z.string().trim().max(5000).default(""),
   details: z.string().max(2000).default(""),
+  detailsBn: z.string().max(2000).default(""),
   price: z.coerce.number().int().min(1),
   compareAtPrice: z.coerce.number().int().min(0).default(0),
   categoryId: z.coerce.number().int().positive(),
@@ -43,9 +46,12 @@ const productPatch = productBody.partial();
 
 type ProductValues = {
   name: string;
+  nameBn: string;
   slug: string;
   description: string;
+  descriptionBn: string;
   details: string[];
+  detailsBn: string[];
   price: number;
   compareAtPrice: number | null;
   categoryId: number;
@@ -63,10 +69,14 @@ async function toValues(
 ): Promise<{ values?: ProductValues; error?: string }> {
   const out: Record<string, unknown> = {};
   if (input.name !== undefined) out.name = input.name;
+  if (input.nameBn !== undefined) out.nameBn = input.nameBn;
   if (input.slug !== undefined || !partial)
     out.slug = slugify(String(input.slug || ("name" in input ? input.name : "")));
   if (input.description !== undefined) out.description = input.description;
+  if (input.descriptionBn !== undefined) out.descriptionBn = input.descriptionBn;
   if (input.details !== undefined) out.details = parseList(input.details, "\n").slice(0, 30);
+  if (input.detailsBn !== undefined)
+    out.detailsBn = parseList(input.detailsBn, "\n").slice(0, 30);
   if (input.price !== undefined) out.price = Math.max(0, Math.floor(input.price));
   if (input.compareAtPrice !== undefined)
     out.compareAtPrice = input.compareAtPrice > 0 ? Math.floor(input.compareAtPrice) : null;

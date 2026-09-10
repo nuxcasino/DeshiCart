@@ -23,3 +23,34 @@ export function switchLocalePath(pathname: string, lang: Locale): string {
   }
   return lp(lang, pathname);
 }
+
+/**
+ * Localized content pick with English fallback (§18). BN fields are optional
+ * editorial translations — empty BN falls back to EN, never to blank.
+ */
+export function pick<T extends { [k: string]: unknown }>(
+  lang: Locale,
+  row: T,
+  field: keyof T & string
+): string {
+  if (lang === "bn") {
+    const bnKey = `${field}Bn` as keyof T;
+    const bn = row[bnKey];
+    if (typeof bn === "string" && bn.trim() !== "") return bn;
+  }
+  return String(row[field] ?? "");
+}
+
+/** Localized string-array pick (e.g. product details) with EN fallback. */
+export function pickList<T extends { [k: string]: unknown }>(
+  lang: Locale,
+  row: T,
+  field: keyof T & string
+): string[] {
+  if (lang === "bn") {
+    const bn = row[`${field}Bn` as keyof T];
+    if (Array.isArray(bn) && bn.length > 0) return bn as string[];
+  }
+  const en = row[field];
+  return Array.isArray(en) ? (en as string[]) : [];
+}

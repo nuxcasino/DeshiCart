@@ -8,7 +8,7 @@ import { adminCategoriesClient } from "@/lib/hono";
 export default function CategoryManager({ initial }: { initial: Category[] }) {
   const router = useRouter();
   const [items, setItems] = useState<Category[]>(initial);
-  const [form, setForm] = useState({ name: "", slug: "", tagline: "", image: "" });
+  const [form, setForm] = useState({ name: "", nameBn: "", slug: "", tagline: "", taglineBn: "", image: "" });
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
@@ -28,7 +28,7 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
       }
       const created = body.category;
       setItems((prev) => [...prev, created]);
-      setForm({ name: "", slug: "", tagline: "", image: "" });
+      setForm({ name: "", nameBn: "", slug: "", tagline: "", taglineBn: "", image: "" });
       router.refresh();
     } finally {
       setSending(false);
@@ -85,12 +85,20 @@ export default function CategoryManager({ initial }: { initial: Category[] }) {
           <input required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} className={input} />
         </label>
         <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-soft">Name (Bangla)</span>
+          <input value={form.nameBn} onChange={(e) => setForm((f) => ({ ...f, nameBn: e.target.value }))} className={input} />
+        </label>
+        <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-soft">Slug (auto from name if empty)</span>
           <input value={form.slug} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} className={input} />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-soft">Tagline</span>
           <input value={form.tagline} onChange={(e) => setForm((f) => ({ ...f, tagline: e.target.value }))} className={input} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold text-ink-soft">Tagline (Bangla)</span>
+          <input value={form.taglineBn} onChange={(e) => setForm((f) => ({ ...f, taglineBn: e.target.value }))} className={input} />
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-soft">Image URL</span>

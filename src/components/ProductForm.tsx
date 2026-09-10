@@ -7,9 +7,12 @@ import { adminProductsClient } from "@/lib/hono";
 
 type Draft = {
   name: string;
+  nameBn: string;
   slug: string;
   description: string;
+  descriptionBn: string;
   details: string;
+  detailsBn: string;
   price: string;
   compareAtPrice: string;
   categoryId: string;
@@ -24,9 +27,12 @@ type Draft = {
 function toDraft(p?: Product): Draft {
   return {
     name: p?.name ?? "",
+    nameBn: p?.nameBn ?? "",
     slug: p?.slug ?? "",
     description: p?.description ?? "",
+    descriptionBn: p?.descriptionBn ?? "",
     details: (p?.details ?? []).join("\n"),
+    detailsBn: (p?.detailsBn ?? []).join("\n"),
     price: p ? String(p.price) : "",
     compareAtPrice: p?.compareAtPrice ? String(p.compareAtPrice) : "",
     categoryId: p ? String(p.categoryId) : "",
@@ -114,6 +120,10 @@ export default function ProductForm({
         <input required value={form.name} onChange={set("name")} className={input} />
       </label>
       <label className="block">
+        <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-ink-soft">Name (Bangla)</span>
+        <input value={form.nameBn} onChange={set("nameBn")} placeholder="নয়ার এসেনশিয়াল টি" className={input} />
+      </label>
+      <label className="block">
         <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-ink-soft">Slug *</span>
         <input required value={form.slug} onChange={set("slug")} placeholder="noir-essential-tee" className={input} />
       </label>
@@ -121,9 +131,17 @@ export default function ProductForm({
         <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-ink-soft">Description *</span>
         <textarea required value={form.description} onChange={set("description")} rows={3} className={input} />
       </label>
+      <label className="block sm:col-span-2">
+        <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-ink-soft">Description (Bangla)</span>
+        <textarea value={form.descriptionBn} onChange={set("descriptionBn")} rows={3} className={input} />
+      </label>
       <label className="block">
         <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-ink-soft">Details (one per line)</span>
         <textarea value={form.details} onChange={set("details")} rows={4} className={input} />
+      </label>
+      <label className="block">
+        <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-ink-soft">Details Bangla (one per line)</span>
+        <textarea value={form.detailsBn} onChange={set("detailsBn")} rows={4} className={input} />
       </label>
       <label className="block">
         <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-ink-soft">Images (one URL per line)</span>

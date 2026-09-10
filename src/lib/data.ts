@@ -49,7 +49,7 @@ export async function getShopProducts(filters: ShopFilters) {
   }
   if (filters.q) {
     conditions.push(
-      sql`(${products.name} ILIKE ${"%" + filters.q + "%"} OR ${products.description} ILIKE ${"%" + filters.q + "%"})`
+      sql`(${products.name} ILIKE ${"%" + filters.q + "%"} OR ${products.description} ILIKE ${"%" + filters.q + "%"} OR ${products.nameBn} ILIKE ${"%" + filters.q + "%"} OR ${products.descriptionBn} ILIKE ${"%" + filters.q + "%"})`
     );
   }
 
