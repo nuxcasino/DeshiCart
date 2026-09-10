@@ -75,3 +75,10 @@ works normally.
   / create a dedicated role), update `.env` locally and `DATABASE_URL` in Vercel,
   and confirm `.env` has never been pushed to any remote
   (`git log --all -- .env`). Treat the old password as compromised.
+
+## `PAYMENT_CREDENTIALS_KEY` — required to store gateway secrets
+
+- 64 hex chars (32 bytes, AES-256-GCM). Generate: `openssl rand -hex 32`.
+- Used only server-side to encrypt gateway credentials in the database.
+- Without it: checkout still works (SSLCommerz sandbox via `SSLCZ_*` env), but
+  saving credentials in `/admin/payment-gateways` is refused with a clear error.

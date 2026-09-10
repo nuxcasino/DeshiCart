@@ -314,3 +314,26 @@ dependency — checkout reads local tables.
 - **Admin:** `/admin/zones` manages rules (`POST /api/admin/shipping-rules`
   upserts by scope+ref with ref-existence check, `DELETE …/[id]`) plus the
   legacy city zones.
+
+---
+
+## Payment gateways (registry + abstraction)
+
+Checkout renders methods from `GET /api/payment-gateways` (public config only:
+key, display name, currency, fee, limits, sandbox flag, direct/redirect kind —
+never secrets). Server enforces enablement, min/max order values and fees;
+`/api/orders` accepts direct methods only (COD), `/api/payments/init` accepts
+redirect methods only — posting a gateway key to the wrong endpoint 400s, so
+unpaid orders can never be confirmed. Orders store `gateway_fee`; every
+init/validation/failure writes a `payment_transactions` audit row (no secrets,
+no card data).
+
+- **Admin:** `/admin/payment-gateways` — enable/sandbox/maintenance toggles,
+  display name, currency, min/max, extra fee, priority, AES-256-GCM credential
+  forms (masked, blank = keep), per-gateway test connection.
+- **`GET /api/admin/gateways`** — full config with `hasCredentials` flags
+  (values never returned) + credential field definitions.
+- **`PATCH /api/admin/gateways/:key`** — config + credential merge (requires
+  `PAYMENT_CREDENTIALS_KEY` when saving secrets).
+- **`POST /api/admin/gateways/:key/test`** — credential presence + gateway
+  reachability check (no transaction made).
