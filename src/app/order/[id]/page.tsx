@@ -52,6 +52,13 @@ export default async function OrderPage({
         <p className="mt-1 text-xs text-ink-soft">
           A confirmation was sent to {order.email}
         </p>
+        {order.paymentStatus === "paid" && order.riskLevel === 1 && (
+          <p className="mx-auto mt-4 max-w-md rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-xs leading-relaxed text-ink-soft">
+            ⚠️ Your online payment was flagged for a routine review by the
+            payment provider. Your order is reserved — we&apos;ll confirm it
+            shortly and contact you if anything is needed.
+          </p>
+        )}
       </div>
 
       <div className="mt-10 overflow-hidden rounded-xl border border-sand bg-white animate-fade-up" style={{ animationDelay: "0.15s" }}>

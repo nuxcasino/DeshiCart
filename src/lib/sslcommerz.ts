@@ -107,6 +107,10 @@ export type ValidationResult = {
   amount: number;
   currency: string;
   status: string;
+  bankTranId: string;
+  cardInfo: string;
+  riskLevel: number;
+  storeAmount: string;
 };
 
 /** Server-side Order Validation API — the only trustworthy payment proof. */
@@ -126,6 +130,8 @@ export async function validateSslcommerzTransaction(
   }
   const data = await res.json();
   const status = String(data?.status ?? "");
+  const brand = String(data?.card_brand ?? "").trim();
+  const cardType = String(data?.card_type ?? "").trim();
   return {
     // Success/redirect callbacks return VALID; server-to-server IPN returns VALIDATED.
     valid: status === "VALID" || status === "VALIDATED",
@@ -133,5 +139,49 @@ export async function validateSslcommerzTransaction(
     amount: Number(data?.amount ?? NaN),
     currency: String(data?.currency ?? ""),
     status,
+    bankTranId: String(data?.bank_tran_id ?? ""),
+    cardInfo: [brand, cardType].filter(Boolean).join(" · "),
+    riskLevel: Number(data?.risk_level ?? 0) === 1 ? 1 : 0,
+    storeAmount: String(data?.store_amount ?? ""),
   };
+}
+
+export type TransactionQueryElement = {
+  status: string;
+  valId: string;
+  tranId: string;
+  amount: number;
+  bankTranId: string;
+};
+
+/**
+ * Transaction Query API — look up all gateway attempts for our tran_id.
+ * Used to reconcile orders stuck in `pending` (customer paid but never
+ * returned to the site). Returns one element per attempt found.
+ */
+export async function querySslcommerzTransaction(
+  tranId: string
+): Promise<TransactionQueryElement[]> {
+  const cfg = getSslcommerzConfig();
+  const url =
+    `${cfg.base}/validator/api/merchantTransIDvalidationAPI.php` +
+    `?tran_id=${encodeURIComponent(tranId)}` +
+    `&store_id=${encodeURIComponent(cfg.storeId)}` +
+    `&store_passwd=${encodeURIComponent(cfg.storePassword)}` +
+    `&format=json`;
+  const res = await fetch(url, { method: "GET" });
+  if (!res.ok) {
+    throw new Error(`SSLCommerz query failed (HTTP ${res.status})`);
+  }
+  const data = await res.json();
+  if (data?.APIConnect !== "DONE" || !Array.isArray(data?.element)) {
+    return [];
+  }
+  return data.element.map((el: Record<string, unknown>) => ({
+    status: String(el?.status ?? ""),
+    valId: String(el?.val_id ?? ""),
+    tranId: String(el?.tran_id ?? ""),
+    amount: Number(el?.amount ?? NaN),
+    bankTranId: String(el?.bank_tran_id ?? ""),
+  }));
 }

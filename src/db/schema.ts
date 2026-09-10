@@ -67,6 +67,11 @@ export const orders = pgTable("orders", {
   status: text("status").notNull().default("confirmed"),
   paymentStatus: text("payment_status").notNull().default("pending"),
   transactionId: text("transaction_id"),
+  gatewayValId: text("gateway_val_id"),
+  bankTranId: text("bank_tran_id"),
+  cardInfo: text("card_info"),
+  riskLevel: integer("risk_level").notNull().default(0),
+  storeAmount: text("store_amount"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

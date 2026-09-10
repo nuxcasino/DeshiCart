@@ -147,6 +147,19 @@ variant: same verification, JSON `{ "ok": true/false }`, idempotent.
 - Sources: `src/app/api/payments/*/route.ts`, `src/lib/sslcommerz.ts`,
   `src/lib/payments.ts`, `src/lib/stock.ts`
 
+### `POST /api/payments/reconcile`
+
+Reconciles a `pending` order via the Transaction Query API (for payments that
+succeeded at the bank but never returned to the site, e.g. abandoned tab).
+Terminal (`failed`/`cancelled`) orders are never modified.
+
+- **Request:** `{ "tranId": "DC-1725970000000" }`
+- **Response `200`:** `{ "outcome": "paid" | "pending" | "failed" | "not-found", "orderId": 42 | null }`
+- A `paid` result also persists gateway metadata on the order (`gateway_val_id`,
+  `bank_tran_id`, `card_info`, `risk_level`, `store_amount`) — the same fields
+  stored by the success/IPN path. `risk_level: 1` marks the payment for routine
+  review (shown to the customer on the order page).
+
 ## Non-API server reads (for frontend developers)
 
 These are not HTTP endpoints — pages query the DB directly via `src/lib/data.ts`:
