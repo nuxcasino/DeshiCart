@@ -3,8 +3,15 @@ import type { Product } from "@/db/schema";
 import { formatBDT } from "@/lib/format";
 import Stars from "./Stars";
 import QuickAddButton from "./QuickAddButton";
+import WishlistButton from "./WishlistButton";
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({
+  product,
+  wishlisted = false,
+}: {
+  product: Product;
+  wishlisted?: boolean;
+}) {
   const soldOut = product.stock <= 0;
   const discount =
     product.compareAtPrice && product.compareAtPrice > product.price
@@ -66,8 +73,22 @@ export default function ProductCard({ product }: { product: Product }) {
       </Link>
 
       {!soldOut && (
-        <div className="absolute right-3 top-3 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="absolute right-3 top-3 flex translate-y-1 flex-col gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
           <QuickAddButton product={product} />
+          <WishlistButton
+            productId={product.id}
+            name={product.name}
+            initialSaved={wishlisted}
+          />
+        </div>
+      )}
+      {soldOut && (
+        <div className="absolute right-3 top-3 translate-y-1 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <WishlistButton
+            productId={product.id}
+            name={product.name}
+            initialSaved={wishlisted}
+          />
         </div>
       )}
 

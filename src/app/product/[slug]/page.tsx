@@ -6,6 +6,7 @@ import {
   getProductReviews,
   getRelatedProducts,
 } from "@/lib/data";
+import { getWishlistIds } from "@/lib/wishlist";
 import { formatBDT } from "@/lib/format";
 import Gallery from "@/components/Gallery";
 import PurchasePanel from "@/components/PurchasePanel";
@@ -24,10 +25,11 @@ export default async function ProductPage({
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const [category, reviews, related] = await Promise.all([
+  const [category, reviews, related, wishlistIds] = await Promise.all([
     getCategoryById(product.categoryId),
     getProductReviews(product.id),
     getRelatedProducts(product),
+    getWishlistIds(),
   ]);
 
   const discount =
@@ -241,7 +243,7 @@ export default async function ProductPage({
           </h2>
           <div className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 lg:grid-cols-4">
             {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} wishlisted={wishlistIds.has(p.id)} />
             ))}
           </div>
         </section>

@@ -1,11 +1,38 @@
 import { db } from "@/db";
-import { categories, products, reviews } from "@/db/schema";
+import { categories, products, reviews, shippingZones } from "@/db/schema";
 import { sql } from "drizzle-orm";
 import { seedCategories, seedProducts, seedReviews } from "./seed-data";
+
+const defaultShippingZones = [
+  { city: "Dhaka", fee: 60, freeOver: 3000 },
+  { city: "Chattogram", fee: 100, freeOver: 3000 },
+  { city: "Sylhet", fee: 100, freeOver: 3000 },
+  { city: "Rajshahi", fee: 100, freeOver: 3000 },
+  { city: "Khulna", fee: 100, freeOver: 3000 },
+  { city: "Barishal", fee: 100, freeOver: 3000 },
+  { city: "Rangpur", fee: 100, freeOver: 3000 },
+  { city: "Mymensingh", fee: 100, freeOver: 3000 },
+  { city: "Cumilla", fee: 100, freeOver: 3000 },
+  { city: "Other", fee: 130, freeOver: 3000 },
+];
+
+let zonesSeeded = false;
+
+export async function ensureShippingZones() {
+  if (zonesSeeded) return;
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(shippingZones);
+  if (count === 0) {
+    await db.insert(shippingZones).values(defaultShippingZones).onConflictDoNothing();
+  }
+  zonesSeeded = true;
+}
 
 let seeded = false;
 
 export async function ensureSeeded() {
+  await ensureShippingZones();
   if (seeded) return;
   const [{ count }] = await db
     .select({ count: sql<number>`count(*)::int` })

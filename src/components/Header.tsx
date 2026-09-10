@@ -103,11 +103,19 @@ export default function Header() {
                 </svg>
               </Link>
               <Link
+                href="/wishlist"
+                className="hidden sm:flex p-2 text-ink hover:text-clay transition-colors"
+                aria-label="Wishlist"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+                  <path d="M12 20.5C7 16.5 3 13.2 3 9.3 3 6.4 5.2 4.5 7.7 4.5c1.7 0 3.3.9 4.3 2.4 1-1.5 2.6-2.4 4.3-2.4 2.5 0 4.7 1.9 4.7 4.8 0 3.9-4 7.2-9 11.2Z" strokeLinejoin="round" />
+                </svg>
+              </Link>
+              <Link
                 href={accountName ? "/account" : "/login"}
                 className="flex items-center gap-1.5 p-2 text-ink hover:text-clay transition-colors"
                 aria-label={accountName ? "My account" : "Log in"}
-              >
-                {accountName ? (
+              >                {accountName ? (
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-clay font-display text-xs font-semibold text-white">
                     {accountName.trim()[0]?.toUpperCase() ?? "•"}
                   </span>

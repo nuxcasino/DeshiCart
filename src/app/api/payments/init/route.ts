@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { inArray, eq } from "drizzle-orm";
-import { shippingFor } from "@/lib/format";
 import { findInsufficientStock, reserveStock } from "@/lib/stock";
+import { applyCoupon, releaseCoupon } from "@/lib/coupons";
+import { shippingForCity } from "@/lib/shipping";
 import { getSiteUrl, initSslcommerzPayment } from "@/lib/sslcommerz";
 import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
 import {
@@ -97,11 +98,23 @@ export async function POST(request: Request) {
     }
 
     const subtotal = lineItems.reduce((a, i) => a + i.price * i.quantity, 0);
-    const shipping = shippingFor(subtotal);
-    const total = subtotal + shipping;
+
+    const couponCode =
+      String(data.couponCode ?? "").trim().toUpperCase().slice(0, 40) || null;
+    let discount = 0;
+    if (couponCode) {
+      const applied = await applyCoupon(couponCode, subtotal);
+      if (!applied.ok) {
+        return NextResponse.json({ error: applied.error }, { status: 409 });
+      }
+      discount = applied.discount;
+    }
+    const shipping = await shippingForCity(city, subtotal - discount);
+    const total = subtotal - discount + shipping;
 
     const reserved = await reserveStock(lineItems);
     if (!reserved.ok) {
+      if (couponCode) await releaseCoupon(couponCode);
       return NextResponse.json(
         { error: "Some items just sold out", items: [reserved.failed] },
         { status: 409 }
@@ -124,6 +137,8 @@ export async function POST(request: Request) {
           notes,
           paymentMethod: "sslcommerz",
           subtotal,
+          discount,
+          couponCode,
           shipping,
           total,
           status: "pending",
@@ -138,6 +153,7 @@ export async function POST(request: Request) {
     } catch {
       const { releaseStock } = await import("@/lib/stock");
       await releaseStock(lineItems);
+      if (couponCode) await releaseCoupon(couponCode);
       return NextResponse.json(
         { error: "Could not start payment. Please try again." },
         { status: 500 }
@@ -160,9 +176,10 @@ export async function POST(request: Request) {
       });
       return NextResponse.json({ orderId, gatewayUrl });
     } catch (error) {
-      // Gateway unreachable — cancel the pending order and release stock.
+      // Gateway unreachable — cancel the pending order and release stock + coupon.
       const { releaseStock } = await import("@/lib/stock");
       await releaseStock(lineItems);
+      if (couponCode) await releaseCoupon(couponCode);
       await db
         .update(orders)
         .set({ paymentStatus: "failed", status: "cancelled" })

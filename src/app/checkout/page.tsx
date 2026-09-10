@@ -95,8 +95,59 @@ function CheckoutForm() {
         ? "Online payment was cancelled. Your bag is kept as-is — please try again or choose Cash on Delivery."
         : null;
 
-  const shipping = shippingFor(subtotal);
-  const total = subtotal + shipping;
+  const [couponCode, setCouponCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+  const [zoneShipping, setZoneShipping] = useState<number | null>(null);
+
+  const discounted = Math.max(0, subtotal - discount);
+
+  // District-based delivery fee; falls back to the flat rule on error.
+  // (The previous quote stays visible while the new one loads.)
+  useEffect(() => {
+    fetch(
+      `/api/shipping?city=${encodeURIComponent(form.city)}&subtotal=${discounted}`
+    )
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d?.shipping === "number") setZoneShipping(d.shipping);
+      })
+      .catch(() => {});
+  }, [form.city, discounted]);
+
+  const shipping = zoneShipping ?? shippingFor(discounted);
+  const total = discounted + shipping;
+
+  const applyCouponCode = async () => {
+    if (!couponCode.trim()) return;
+    setCouponMsg(null);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, subtotal }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCouponMsg(typeof body?.error === "string" ? body.error : "Invalid coupon.");
+        setDiscount(0);
+        setAppliedCode(null);
+        return;
+      }
+      setDiscount(body.discount ?? 0);
+      setAppliedCode(body.code);
+    } catch {
+      setCouponMsg("Could not check coupon. Please try again.");
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode("");
+    setDiscount(0);
+    setAppliedCode(null);
+    setCouponMsg(null);
+  };
 
   const set = (key: keyof typeof form) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -115,6 +166,7 @@ function CheckoutForm() {
         body: JSON.stringify({
           ...form,
           paymentMethod,
+          couponCode: appliedCode,
           items: items.map((i) => ({
             productId: i.productId,
             size: i.size,
@@ -378,11 +430,52 @@ function CheckoutForm() {
                 </li>
               ))}
             </ul>
-            <div className="mt-6 space-y-2 border-t border-sand pt-4 text-sm">
+            <div className="mt-5 border-t border-sand pt-4">
+              {appliedCode ? (
+                <div className="flex items-center justify-between rounded-lg bg-leaf/10 px-3 py-2.5 text-sm">
+                  <span className="font-bold text-leaf">✓ {appliedCode} (−{formatBDT(discount)})</span>
+                  <button
+                    type="button"
+                    onClick={removeCoupon}
+                    className="text-xs font-bold text-ink-soft hover:text-clay hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Coupon code"
+                      className="w-full rounded-lg border border-sand px-3 py-2.5 text-sm uppercase outline-none transition-colors focus:border-clay"
+                    />
+                    <button
+                      type="button"
+                      onClick={applyCouponCode}
+                      className="shrink-0 rounded-lg bg-ink px-4 py-2.5 text-xs font-bold text-cream transition-colors hover:bg-clay"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {couponMsg && (
+                    <p className="mt-1.5 text-xs font-semibold text-clay">{couponMsg}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="mt-4 space-y-2 border-t border-sand pt-4 text-sm">
               <div className="flex justify-between">
                 <span className="text-ink-soft">Subtotal</span>
                 <span className="font-semibold">{formatBDT(subtotal)}</span>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-ink-soft">Discount</span>
+                  <span className="font-semibold text-leaf">−{formatBDT(discount)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-ink-soft">Delivery</span>
                 <span className="font-semibold">

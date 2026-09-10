@@ -35,7 +35,10 @@ export default async function AccountPage() {
           </h1>
           <p className="mt-2 text-sm text-ink-soft">
             {toSafeUser(user).email}
-            {user.phone ? ` · ${user.phone}` : ""}
+            {user.phone ? ` · ${user.phone}` : ""} ·{" "}
+            <Link href="/wishlist" className="font-bold text-clay hover:underline">
+              My wishlist →
+            </Link>
           </p>
         </div>
         <LogoutButton />

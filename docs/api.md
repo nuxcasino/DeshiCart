@@ -202,6 +202,26 @@ to `/login` when anonymous).
 
 ---
 
+## Coupons, shipping & wishlist
+
+- **`POST /api/coupons/validate`** — `{ code, subtotal }` → `200 { code, discount }`
+  (preview only, no usage consumed). `400` for unknown/inactive/expired/minimum-
+  unmet/exhausted codes. Rate-limited 20/min per IP.
+- **`GET /api/shipping?city=&subtotal=`** — `{ shipping }` district fee quote
+  (zone row or flat-rule fallback).
+- **`GET /api/wishlist`** — own saved products + ids (401 when logged out).
+- **`POST /api/wishlist`** — `{ productId }` toggles save/unsave →
+  `{ saved: boolean }` (401 redirects to login in the UI).
+- Orders accept `couponCode`: validated + consumed atomically at placement
+  (`409` when invalid/exhausted; usage released if the order later fails).
+  Order rows carry `discount` + `coupon_code`, shown on receipts and order pages.
+- **Admin:** `/admin/coupons` + `/api/admin/coupons` (GET/POST) and
+  `/api/admin/coupons/[id]` (PATCH toggle/edit, DELETE);
+  `/admin/zones` + `/api/admin/zones` (GET, POST upsert by city) and
+  `/api/admin/zones/[id]` (DELETE). Pages: `/wishlist` (login required).
+
+---
+
 ## Admin (`/admin`, all endpoints 403 without `is_admin`)
 
 Bootstrap the first admin: sign up normally, then flip `is_admin` to `true` for

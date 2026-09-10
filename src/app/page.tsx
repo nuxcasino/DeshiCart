@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCategories, getFeaturedProducts } from "@/lib/data";
+import { getWishlistIds } from "@/lib/wishlist";
 import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +18,10 @@ const marqueeItems = [
 ];
 
 export default async function HomePage() {
-  const [cats, featured] = await Promise.all([
+  const [cats, featured, wishlistIds] = await Promise.all([
     getCategories(),
     getFeaturedProducts(),
+    getWishlistIds(),
   ]);
 
   return (
@@ -168,7 +170,7 @@ export default async function HomePage() {
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
             {featured.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} wishlisted={wishlistIds.has(p.id)} />
             ))}
           </div>
         </div>

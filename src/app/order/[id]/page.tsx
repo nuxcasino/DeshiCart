@@ -107,6 +107,14 @@ export default async function OrderPage({
             <span className="text-ink-soft">Subtotal</span>
             <span className="font-semibold">{formatBDT(order.subtotal)}</span>
           </div>
+          {order.discount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-ink-soft">
+                Discount{order.couponCode ? ` (${order.couponCode})` : ""}
+              </span>
+              <span className="font-semibold text-leaf">−{formatBDT(order.discount)}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-ink-soft">Delivery</span>
             <span className="font-semibold">

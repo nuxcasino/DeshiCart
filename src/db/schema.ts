@@ -63,6 +63,8 @@ export const orders = pgTable("orders", {
   notes: text("notes"),
   paymentMethod: text("payment_method").notNull(),
   subtotal: integer("subtotal").notNull(),
+  discount: integer("discount").notNull().default(0),
+  couponCode: text("coupon_code"),
   shipping: integer("shipping").notNull(),
   total: integer("total").notNull(),
   status: text("status").notNull().default("confirmed"),
@@ -132,3 +134,38 @@ export const addresses = pgTable("addresses", {
 
 export type User = typeof users.$inferSelect;
 export type Address = typeof addresses.$inferSelect;
+
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  type: text("type").notNull().default("flat"), // "flat" (BDT) or "percent"
+  value: integer("value").notNull(),
+  minSubtotal: integer("min_subtotal").notNull().default(0),
+  maxUses: integer("max_uses"),
+  usedCount: integer("used_count").notNull().default(0),
+  active: boolean("active").notNull().default(true),
+  expiresAt: timestamp("expires_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const shippingZones = pgTable("shipping_zones", {
+  id: serial("id").primaryKey(),
+  city: text("city").notNull().unique(),
+  fee: integer("fee").notNull(),
+  freeOver: integer("free_over"),
+  active: boolean("active").notNull().default(true),
+});
+
+export const wishlistItems = pgTable("wishlist_items", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  productId: integer("product_id")
+    .notNull()
+    .references(() => products.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type Coupon = typeof coupons.$inferSelect;
+export type ShippingZone = typeof shippingZones.$inferSelect;

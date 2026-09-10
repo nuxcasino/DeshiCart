@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getCategories, getShopProducts, type SortKey } from "@/lib/data";
+import { getWishlistIds } from "@/lib/wishlist";
 import ProductCard from "@/components/ProductCard";
 import FiltersBar from "@/components/FiltersBar";
 import type { Metadata } from "next";
@@ -37,9 +38,10 @@ export default async function ShopPage({
     if (hi) maxPrice = parseInt(hi, 10) || undefined;
   }
 
-  const [categories, products] = await Promise.all([
+  const [categories, products, wishlistIds] = await Promise.all([
     getCategories(),
     getShopProducts({ category, sort, q, minPrice, maxPrice }),
+    getWishlistIds(),
   ]);
 
   const activeCat = categories.find((c) => c.slug === category);
@@ -83,7 +85,7 @@ export default async function ShopPage({
       ) : (
         <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} wishlisted={wishlistIds.has(p.id)} />
           ))}
         </div>
       )}

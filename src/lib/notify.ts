@@ -85,6 +85,9 @@ function receiptHtml(
     `<p>Hi ${order.customerName}, your order is being packed and will reach ${order.city} in 2–4 days.</p>` +
     `<table style="width:100%;border-collapse:collapse">${rows}</table>` +
     `<p>Subtotal: ৳${order.subtotal.toLocaleString("en-IN")}<br/>` +
+    (order.discount > 0
+      ? `Discount${order.couponCode ? ` (${order.couponCode})` : ""}: −৳${order.discount.toLocaleString("en-IN")}<br/>`
+      : "") +
     `Delivery: ${order.shipping === 0 ? "Free" : "৳" + order.shipping.toLocaleString("en-IN")}<br/>` +
     `<strong>Total: ৳${order.total.toLocaleString("en-IN")}</strong></p>` +
     `<p>Delivering to: ${order.address}, ${order.city} · ${order.phone}</p>`

@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { orderItems, orders, products } from "@/db/schema";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
-import { shippingFor } from "@/lib/format";
 import { getSessionUserFromRequest, isValidEmail } from "@/lib/auth";
+import { applyCoupon, releaseCoupon } from "@/lib/coupons";
+import { shippingForCity } from "@/lib/shipping";
 import { notifyOrderPlaced } from "@/lib/notify";
 import {
   clientIp,
@@ -100,7 +101,19 @@ export async function POST(request: Request) {
     }
 
     const subtotal = lineItems.reduce((a, i) => a + i.price * i.quantity, 0);
-    const shipping = shippingFor(subtotal);
+
+    // Optional coupon (validated + consumed atomically server-side).
+    const couponCode =
+      String(data.couponCode ?? "").trim().toUpperCase().slice(0, 40) || null;
+    let discount = 0;
+    if (couponCode) {
+      const applied = await applyCoupon(couponCode, subtotal);
+      if (!applied.ok) {
+        return NextResponse.json({ error: applied.error }, { status: 409 });
+      }
+      discount = applied.discount;
+    }
+    const shipping = await shippingForCity(city, subtotal - discount);
 
     // Link the order to the account when the customer is logged in.
     const sessionUser = await getSessionUserFromRequest(request);
@@ -125,6 +138,7 @@ export async function POST(request: Request) {
             .set({ stock: sql`${products.stock} + ${done.quantity}` })
             .where(eq(products.id, done.productId));
         }
+        if (couponCode) await releaseCoupon(couponCode);
         return NextResponse.json(
           {
             error: "Some items just sold out",
@@ -149,8 +163,10 @@ export async function POST(request: Request) {
           notes,
           paymentMethod,
           subtotal,
+          discount,
+          couponCode,
           shipping,
-          total: subtotal + shipping,
+          total: subtotal - discount + shipping,
         })
         .returning();
 
@@ -162,13 +178,14 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ orderId: order.id }, { status: 201 });
     } catch {
-      // Order insert failed after reservation — release the reserved stock.
+      // Order insert failed after reservation — release stock and coupon use.
       for (const done of reserved) {
         await db
           .update(products)
           .set({ stock: sql`${products.stock} + ${done.quantity}` })
           .where(eq(products.id, done.productId));
       }
+      if (couponCode) await releaseCoupon(couponCode);
       return NextResponse.json(
         { error: "Could not place order. Please try again." },
         { status: 500 }
