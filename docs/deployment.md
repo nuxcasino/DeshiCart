@@ -31,6 +31,28 @@ Apply to **Production** and **Preview** (and Development if you use `vercel dev`
 
 Details and rotation guidance: [environment.md](environment.md).
 
+### Preview environments (recommended)
+
+Never point Vercel Preview at the production database — test orders, accounts,
+and schema syncs would pollute live data. Instead:
+
+1. Neon dashboard → **Branches** → create a `preview` branch (copy-on-write,
+   instant, near-zero cost).
+2. Copy the preview branch's pooled connection string.
+3. Vercel → Project → Settings → Environment Variables → set `DATABASE_URL` to
+   the preview string for the **Preview** environment only (Production keeps the
+   main branch string).
+4. Every preview deployment auto-syncs the schema (`vercel-build` →
+   `drizzle-kit push`) and self-seeds the demo catalog on first load — reviewers
+   get a fresh working store with zero manual steps.
+5. Keep `SSLCZ_SANDBOX="true"` on Preview always; only Production ever gets live
+   gateway credentials.
+
+> The `main` branch is protected by the CI workflow
+> (`.github/workflows/ci.yml`: lint + typecheck + build on every push/PR).
+> The build job uses a dummy `DATABASE_URL` — pages are `force-dynamic` and the
+> sitemap degrades gracefully, so CI needs no live database.
+
 > The build (`next build`) imports `src/db/index.ts`, which throws at module load
 > if `DATABASE_URL` is missing. **The production build will fail without it set.**
 
