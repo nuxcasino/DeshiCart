@@ -9,15 +9,22 @@ import AddressManager from "@/components/AddressManager";
 import LogoutButton from "@/components/LogoutButton";
 import ReturnRequestButton from "@/components/ReturnRequestButton";
 import { users } from "@/db/schema";
+import { isLocale, lp } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
-export default async function AccountPage() {
+export default async function AccountPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   const session = await getSessionUser();
-  if (!session) redirect("/login");
+  if (!session) redirect(lp(lang, "/login"));
 
   const [user] = await db.select().from(users).where(eq(users.id, session.id));
-  if (!user) redirect("/login");
+  if (!user) redirect(lp(lang, "/login"));
 
   const [myOrders, myAddresses, myReturns] = await Promise.all([
     db.select().from(orders).where(eq(orders.userId, user.id)).orderBy(desc(orders.id)),
@@ -41,7 +48,7 @@ export default async function AccountPage() {
           <p className="mt-2 text-sm text-ink-soft">
             {toSafeUser(user).email}
             {user.phone ? ` · ${user.phone}` : ""} ·{" "}
-            <Link href="/wishlist" className="font-bold text-clay hover:underline">
+            <Link href={lp(lang, "/wishlist")} className="font-bold text-clay hover:underline">
               My wishlist →
             </Link>
           </p>
@@ -57,7 +64,7 @@ export default async function AccountPage() {
           <div className="mt-4 rounded-xl border border-dashed border-sand p-8 text-center">
             <p className="text-sm text-ink-soft">You haven&apos;t placed any orders yet.</p>
             <Link
-              href="/shop"
+              href={lp(lang, "/shop")}
               className="mt-4 inline-block rounded-full bg-ink px-6 py-3 text-sm font-bold text-cream transition-colors hover:bg-clay"
             >
               Start shopping
@@ -69,7 +76,7 @@ export default async function AccountPage() {
               <li key={o.id} className="px-5 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Link
-                    href={`/order/${o.id}`}
+                    href={lp(lang, `/order/${o.id}`)}
                     className="transition-colors hover:text-clay"
                   >
                     <span className="text-sm font-bold">

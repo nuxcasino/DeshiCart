@@ -5,9 +5,10 @@ import Image from "next/image";
 import { useEffect } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useLang } from "@/lib/i18n";
+import { lp, type Locale } from "@/lib/locale";
 import { formatBDT, FREE_SHIPPING_THRESHOLD, shippingFor } from "@/lib/format";
 
-export default function CartDrawer() {
+export default function CartDrawer({ lang }: { lang: Locale }) {
   const { items, isOpen, closeCart, subtotal, updateQuantity, removeItem } =
     useCart();
   const { t } = useLang();
@@ -99,7 +100,7 @@ export default function CartDrawer() {
                 {items.map((item) => (
                   <li key={`${item.productId}-${item.size}`} className="flex gap-4">
                     <Link
-                      href={`/product/${item.slug}`}
+                      href={lp(lang, `/product/${item.slug}`)}
                       onClick={closeCart}
                       className="relative h-24 w-20 shrink-0 overflow-hidden rounded-lg bg-sand"
                     >
@@ -114,7 +115,7 @@ export default function CartDrawer() {
                     <div className="flex flex-1 flex-col">
                       <div className="flex items-start justify-between gap-2">
                         <Link
-                          href={`/product/${item.slug}`}
+                          href={lp(lang, `/product/${item.slug}`)}
                           onClick={closeCart}
                           className="text-sm font-semibold leading-snug hover:text-clay transition-colors"
                         >
@@ -179,7 +180,7 @@ export default function CartDrawer() {
                 </span>
               </div>
               <Link
-                href="/checkout"
+                href={lp(lang, "/checkout")}
                 onClick={closeCart}
                 className="block w-full rounded-full bg-ink py-3.5 text-center text-sm font-bold text-cream transition-all hover:bg-clay hover:shadow-lg"
               >

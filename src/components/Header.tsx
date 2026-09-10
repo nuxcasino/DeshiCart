@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-context";
 import { authClient } from "@/lib/hono";
 import { LangToggle, useLang, type DictKey } from "@/lib/i18n";
+import { lp, type Locale } from "@/lib/locale";
 
 const nav: Array<{ href: string; labelKey: DictKey }> = [
   { href: "/", labelKey: "nav.home" },
@@ -16,7 +17,7 @@ const nav: Array<{ href: string; labelKey: DictKey }> = [
   { href: "/shop?category=accessories", labelKey: "nav.accessories" },
 ];
 
-export default function Header() {
+export default function Header({ lang }: { lang: Locale }) {
   const { count, openCart } = useCart();
   const { t } = useLang();
   const [scrolled, setScrolled] = useState(false);
@@ -78,7 +79,7 @@ export default function Header() {
               </svg>
             </button>
 
-            <Link href="/" className="flex items-baseline gap-1.5 select-none">
+            <Link href={lp(lang, "/")} className="flex items-baseline gap-1.5 select-none">
               <span className="font-display text-2xl font-semibold tracking-tight">
                 Deshi<span className="text-clay">Cart</span>
               </span>
@@ -91,7 +92,7 @@ export default function Header() {
               {nav.map((item) => (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={lp(lang, item.href)}
                   className="text-[13px] font-medium tracking-wide text-ink-soft hover:text-clay transition-colors"
                 >
                   {t(item.labelKey)}
@@ -102,7 +103,7 @@ export default function Header() {
             <div className="flex items-center gap-1">
               <LangToggle />
               <Link
-                href="/shop"
+                href={lp(lang, "/shop")}
                 className="hidden sm:flex p-2 text-ink hover:text-clay transition-colors"
                 aria-label={t("header.search")}
               >
@@ -112,7 +113,7 @@ export default function Header() {
                 </svg>
               </Link>
               <Link
-                href="/wishlist"
+                href={lp(lang, "/wishlist")}
                 className="hidden sm:flex p-2 text-ink hover:text-clay transition-colors"
                 aria-label="Wishlist"
               >
@@ -121,7 +122,7 @@ export default function Header() {
                 </svg>
               </Link>
               <Link
-                href={accountName ? "/account" : "/login"}
+                href={accountName ? lp(lang, "/account") : lp(lang, "/login")}
                 className="flex items-center gap-1.5 p-2 text-ink hover:text-clay transition-colors"
                 aria-label={accountName ? t("header.account") : t("header.login")}
               >                {accountName ? (
@@ -154,12 +155,12 @@ export default function Header() {
           </div>
         </div>
 
-        {menuOpen && (
-            <nav className="lg:hidden border-t border-sand bg-cream px-4 pb-4 pt-2 animate-fade-in">
-              {nav.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
+            {menuOpen && (
+          <nav className="lg:hidden border-t border-sand bg-cream px-4 pb-4 pt-2 animate-fade-in">
+            {nav.map((item) => (
+              <Link
+                key={item.href}
+                href={lp(lang, item.href)}
                   onClick={() => setMenuOpen(false)}
                   className="block py-2.5 text-sm font-medium text-ink-soft hover:text-clay transition-colors border-b border-sand/60 last:border-0"
                 >

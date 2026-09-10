@@ -6,6 +6,7 @@ import { orderItems, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { formatBDT } from "@/lib/format";
 import { getSessionUser } from "@/lib/auth";
+import { isLocale, lp } from "@/lib/locale";
 import ClearCartOnSuccess from "@/components/ClearCartOnSuccess";
 
 export const dynamic = "force-dynamic";
@@ -13,9 +14,10 @@ export const dynamic = "force-dynamic";
 export default async function OrderPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; lang: string }>;
 }) {
-  const { id } = await params;
+  const { id, lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   const orderId = Number(id);
   if (!Number.isInteger(orderId)) notFound();
 
@@ -160,7 +162,7 @@ export default async function OrderPage({
 
       <div className="mt-10 text-center">
         <Link
-          href="/shop"
+          href={lp(lang, "/shop")}
           className="inline-block rounded-full bg-ink px-8 py-3.5 text-sm font-bold text-cream transition-colors hover:bg-clay"
         >
           Continue Shopping

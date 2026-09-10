@@ -1,12 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { isLocale, lp } from "@/lib/locale";
 
 export const metadata: Metadata = {
   title: "Returns & Exchanges",
   description: "DeshiCart 7-day exchange and return policy, refunds and how to request a return.",
 };
 
-export default function ReturnsPage() {
+export default async function ReturnsPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">Our promise</p>
@@ -25,7 +32,7 @@ export default function ReturnsPage() {
         <section className="rounded-xl border border-sand bg-white p-6">
           <h2 className="font-display text-lg font-semibold text-ink">How to request</h2>
           <ol className="mt-2 list-decimal space-y-1.5 pl-5">
-            <li>Log in and open <Link href="/account" className="font-bold text-clay hover:underline">My Account</Link>.</li>
+            <li>Log in and open <Link href={lp(lang, "/account")} className="font-bold text-clay hover:underline">My Account</Link>.</li>
             <li>Find the delivered order and click <strong className="text-ink">Request return</strong> with a reason.</li>
             <li>Our courier partner will contact you for pickup within 24 hours of approval.</li>
           </ol>
@@ -39,8 +46,8 @@ export default function ReturnsPage() {
           </p>
         </section>
         <p>
-          Need help? <Link href="/contact" className="font-bold text-clay hover:underline">Contact us</Link> or
-          check the <Link href="/faq" className="font-bold text-clay hover:underline">FAQ</Link>.
+          Need help? <Link href={lp(lang, "/contact")} className="font-bold text-clay hover:underline">Contact us</Link> or
+          check the <Link href={lp(lang, "/faq")} className="font-bold text-clay hover:underline">FAQ</Link>.
         </p>
       </div>
     </div>

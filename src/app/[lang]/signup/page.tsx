@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { authClient } from "@/lib/hono";
+import { isLocale, lp } from "@/lib/locale";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const { lang: raw } = useParams();
+  const lang = isLocale(typeof raw === "string" ? raw : null) ? (raw as "bn" | "en") : "bn";
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
 
@@ -16,13 +24,13 @@ export default function LoginPage() {
     setSending(true);
     setError(null);
     try {
-      const res = await authClient.login.$post({ json: form });
+      const res = await authClient.signup.$post({ json: form });
       const body = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        setError(body?.error ?? "Login failed. Please try again.");
+        setError(body?.error ?? "Signup failed. Please try again.");
         return;
       }
-      router.push("/account");
+      router.push(lp(lang, "/account"));
       router.refresh();
     } finally {
       setSending(false);
@@ -32,15 +40,27 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-md px-4 py-16 sm:px-6">
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
-        Welcome back
+        Join DeshiCart
       </p>
       <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">
-        Log in
+        Create account
       </h1>
       <form
         onSubmit={submit}
         className="mt-8 space-y-4 rounded-xl border border-sand bg-white p-6 sm:p-8"
       >
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
+            Full name
+          </span>
+          <input
+            required
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="Ayesha Rahman"
+            className="w-full rounded-lg border border-sand px-4 py-3 text-sm outline-none transition-colors focus:border-clay"
+          />
+        </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
             Email
@@ -56,11 +76,24 @@ export default function LoginPage() {
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
-            Password
+            Phone
+          </span>
+          <input
+            type="tel"
+            value={form.phone}
+            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+            placeholder="01XXXXXXXXX"
+            className="w-full rounded-lg border border-sand px-4 py-3 text-sm outline-none transition-colors focus:border-clay"
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-soft">
+            Password (min 8 characters)
           </span>
           <input
             required
             type="password"
+            minLength={8}
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
             placeholder="••••••••"
@@ -73,12 +106,12 @@ export default function LoginPage() {
           disabled={sending}
           className="w-full rounded-full bg-ink py-3.5 text-sm font-bold text-cream transition-colors hover:bg-clay disabled:opacity-60"
         >
-          {sending ? "Logging in…" : "Log in"}
+          {sending ? "Creating account…" : "Create account"}
         </button>
         <p className="text-center text-sm text-ink-soft">
-          New to DeshiCart?{" "}
-          <Link href="/signup" className="font-bold text-clay hover:underline">
-            Create an account
+          Already have an account?{" "}
+          <Link href={lp(lang, "/login")} className="font-bold text-clay hover:underline">
+            Log in
           </Link>
         </p>
       </form>

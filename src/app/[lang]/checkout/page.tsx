@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
   authClient,
@@ -15,6 +15,7 @@ import {
 } from "@/lib/hono";
 import { useCart } from "@/lib/cart-context";
 import { formatBDT, shippingFor } from "@/lib/format";
+import { isLocale, lp } from "@/lib/locale";
 import type { District, Division, Upazila } from "@/db/schema";
 
 type GatewayOption = {
@@ -86,6 +87,8 @@ function CheckoutForm() {
   const { items, subtotal, clearCart } = useCart();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { lang: raw } = useParams();
+  const lang = isLocale(typeof raw === "string" ? raw : null) ? (raw as "bn" | "en") : "bn";
 
   const [form, setForm] = useState({
     customerName: "",
@@ -372,7 +375,7 @@ function CheckoutForm() {
         return;
       }
       clearCart();
-      router.push(`/order/${data.orderId}`);
+      router.push(lp(lang, `/order/${data.orderId}`));
     } catch {
       setStatus("error");
     }
@@ -391,7 +394,7 @@ function CheckoutForm() {
           Add a few pieces before heading to checkout.
         </p>
         <Link
-          href="/shop"
+          href={lp(lang, "/shop")}
           className="mt-6 rounded-full bg-ink px-8 py-3.5 text-sm font-bold text-cream transition-colors hover:bg-clay"
         >
           Browse the Shop

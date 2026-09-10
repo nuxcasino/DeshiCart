@@ -3,15 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { wishlistClient } from "@/lib/hono";
+import { lp, type Locale } from "@/lib/locale";
 
 export default function WishlistButton({
   productId,
   name,
   initialSaved = false,
+  lang,
 }: {
   productId: number;
   name: string;
   initialSaved?: boolean;
+  lang: Locale;
 }) {
   const router = useRouter();
   const [saved, setSaved] = useState(initialSaved);
@@ -24,7 +27,7 @@ export default function WishlistButton({
     try {
       const res = await wishlistClient.index.$post({ json: { productId } });
       if (res.status === 401) {
-        router.push("/login");
+        router.push(lp(lang, "/login"));
         return;
       }
       const body = (await res.json().catch(() => ({}))) as { saved?: boolean };

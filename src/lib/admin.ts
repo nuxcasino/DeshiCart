@@ -22,7 +22,7 @@ async function withAdminFlag(
 /** For admin server components/layouts — redirects non-admins to /login. */
 export async function requireAdmin(): Promise<AdminUser> {
   const admin = await withAdminFlag(await getSessionUser());
-  if (!admin) redirect("/login");
+  if (!admin) redirect("/bn/login");
   return admin;
 }
 

@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Product } from "@/db/schema";
 import { formatBDT } from "@/lib/format";
 import type { CardVariantInfo } from "@/lib/variants";
+import { lp, type Locale } from "@/lib/locale";
 import Stars from "./Stars";
 import QuickAddButton from "./QuickAddButton";
 import WishlistButton from "./WishlistButton";
@@ -11,10 +12,12 @@ export default function ProductCard({
   product,
   wishlisted = false,
   variantInfo,
+  lang,
 }: {
   product: Product;
   wishlisted?: boolean;
   variantInfo?: CardVariantInfo;
+  lang: Locale;
 }) {
   const hasVariants = (variantInfo?.floor ?? null) !== null;
   const displayPrice = variantInfo?.floor ?? product.price;
@@ -30,7 +33,7 @@ export default function ProductCard({
   return (
     <div className="group relative">
       <Link
-        href={`/product/${product.slug}`}
+        href={lp(lang, `/product/${product.slug}`)}
         className="block overflow-hidden rounded-xl bg-sand"
       >
         <div className="relative aspect-[3/4] overflow-hidden">
@@ -95,6 +98,7 @@ export default function ProductCard({
             productId={product.id}
             name={product.name}
             initialSaved={wishlisted}
+            lang={lang}
           />
         </div>
       )}
@@ -104,6 +108,7 @@ export default function ProductCard({
             productId={product.id}
             name={product.name}
             initialSaved={wishlisted}
+            lang={lang}
           />
         </div>
       )}
@@ -115,7 +120,7 @@ export default function ProductCard({
             <span className="text-[11px] text-ink-soft">({product.reviewCount})</span>
           )}
         </div>
-        <Link href={`/product/${product.slug}`}>
+        <Link href={lp(lang, `/product/${product.slug}`)}>
           <h3 className="mt-1 text-sm font-semibold leading-snug transition-colors group-hover:text-clay">
             {product.name}
           </h3>

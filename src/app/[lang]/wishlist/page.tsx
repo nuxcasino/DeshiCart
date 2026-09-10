@@ -5,12 +5,19 @@ import { products, wishlistItems } from "@/db/schema";
 import { desc, eq, inArray } from "drizzle-orm";
 import { getSessionUser } from "@/lib/auth";
 import ProductCard from "@/components/ProductCard";
+import { isLocale, lp } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
-export default async function WishlistPage() {
+export default async function WishlistPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   const user = await getSessionUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(lp(lang, "/login"));
 
   const rows = await db
     .select()
@@ -45,7 +52,7 @@ export default async function WishlistPage() {
             Tap the heart on any product to keep it here.
           </p>
           <Link
-            href="/shop"
+            href={lp(lang, "/shop")}
             className="mt-2 rounded-full bg-ink px-6 py-3 text-sm font-bold text-cream transition-colors hover:bg-clay"
           >
             Browse the Shop
@@ -54,7 +61,7 @@ export default async function WishlistPage() {
       ) : (
         <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {items.map((p) => (
-            <ProductCard key={p.id} product={p} wishlisted />
+            <ProductCard key={p.id} product={p} wishlisted lang={lang} />
           ))}
         </div>
       )}

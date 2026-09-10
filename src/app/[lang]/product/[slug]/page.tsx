@@ -9,6 +9,7 @@ import {
 } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo, getProductVariants } from "@/lib/variants";
+import { isLocale, lp } from "@/lib/locale";
 import { formatBDT } from "@/lib/format";
 import Gallery from "@/components/Gallery";
 import PurchasePanel from "@/components/PurchasePanel";
@@ -40,9 +41,10 @@ export async function generateMetadata({
 export default async function ProductPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ slug: string; lang: string }>;
 }) {
-  const { slug } = await params;
+  const { slug, lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
@@ -78,14 +80,14 @@ export default async function ProductPage({
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       {/* Breadcrumbs */}
       <nav className="mb-6 flex items-center gap-2 text-xs text-ink-soft animate-fade-in">
-        <Link href="/" className="hover:text-clay transition-colors">Home</Link>
+        <Link href={lp(lang, "/")} className="hover:text-clay transition-colors">Home</Link>
         <span>/</span>
-        <Link href="/shop" className="hover:text-clay transition-colors">Shop</Link>
+        <Link href={lp(lang, "/shop")} className="hover:text-clay transition-colors">Shop</Link>
         {category && (
           <>
             <span>/</span>
             <Link
-              href={`/shop?category=${category.slug}`}
+              href={lp(lang, `/shop?category=${category.slug}`)}
               className="hover:text-clay transition-colors"
             >
               {category.name}
@@ -282,6 +284,7 @@ export default async function ProductPage({
                 product={p}
                 wishlisted={wishlistIds.has(p.id)}
                 variantInfo={relatedVariantInfo.get(p.id)}
+                lang={lang}
               />
             ))}
           </div>

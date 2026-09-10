@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCategories, getShopProducts, type SortKey } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo } from "@/lib/variants";
+import { isLocale, lp } from "@/lib/locale";
 import ProductCard from "@/components/ProductCard";
 import FiltersBar from "@/components/FiltersBar";
 import type { Metadata } from "next";
@@ -21,15 +22,19 @@ function first(v: string | string[] | undefined) {
 }
 
 export default async function ShopPage({
+  params,
   searchParams,
 }: {
+  params: Promise<{ lang: string }>;
   searchParams: SearchParams;
 }) {
-  const params = await searchParams;
-  const category = first(params.category);
-  const sort = first(params.sort) as SortKey | undefined;
-  const q = first(params.q);
-  const price = first(params.price);
+  const { lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
+  const query = await searchParams;
+  const category = first(query.category);
+  const sort = first(query.sort) as SortKey | undefined;
+  const q = first(query.q);
+  const price = first(query.price);
 
   let minPrice: number | undefined;
   let maxPrice: number | undefined;
@@ -78,7 +83,7 @@ export default async function ShopPage({
             collection.
           </p>
           <Link
-            href="/shop"
+            href={lp(lang, "/shop")}
             className="mt-2 rounded-full bg-ink px-6 py-3 text-sm font-bold text-cream transition-colors hover:bg-clay"
           >
             Clear filters
@@ -92,6 +97,7 @@ export default async function ShopPage({
               product={p}
               wishlisted={wishlistIds.has(p.id)}
               variantInfo={variantInfo.get(p.id)}
+              lang={lang}
             />
           ))}
         </div>

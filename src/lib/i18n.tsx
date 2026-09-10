@@ -4,12 +4,17 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useState,
   type ReactNode,
 } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  LOCALE_COOKIE,
+  switchLocalePath,
+  type Locale,
+} from "./locale";
 
-export type Lang = "en" | "bn";
+export type Lang = Locale;
 
 const STORAGE_KEY = "deshicart:lang";
 
@@ -108,28 +113,19 @@ type LangContextValue = {
 
 const LangContext = createContext<LangContextValue | null>(null);
 
-export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("en");
+export function LangProvider({
+  children,
+  initialLang,
+}: {
+  children: ReactNode;
+  initialLang: Lang;
+}) {
+  // Language comes from the URL (/bn, /en); the toggle below navigates
+  // between locales instead of swapping client state (SEO-friendly URLs).
+  const [lang] = useState<Lang>(initialLang);
 
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      // Intentional external-system sync: apply the saved language once after
-      // mount (server renders English to avoid hydration mismatch).
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (saved === "bn" || saved === "en") setLangState(saved);
-    } catch {
-      // storage may be unavailable
-    }
-  }, []);
-
-  const setLang = useCallback((l: Lang) => {
-    setLangState(l);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, l);
-    } catch {
-      // ignore
-    }
+  const setLang = useCallback((_l: Lang) => {
+    // Kept for API compatibility; use <LangToggle /> to switch languages.
   }, []);
 
   const t = useCallback(
@@ -151,10 +147,24 @@ export function useLang(): LangContextValue {
 }
 
 export function LangToggle() {
-  const { lang, setLang } = useLang();
+  const { lang } = useLang();
+  const router = useRouter();
+  const pathname = usePathname();
+  const other: Lang = lang === "en" ? "bn" : "en";
+
+  const switchLang = () => {
+    try {
+      document.cookie = `${LOCALE_COOKIE}=${other}; Path=/; Max-Age=31536000`;
+      window.localStorage.setItem(STORAGE_KEY, other);
+    } catch {
+      // ignore
+    }
+    router.push(switchLocalePath(pathname, other));
+  };
+
   return (
     <button
-      onClick={() => setLang(lang === "en" ? "bn" : "en")}
+      onClick={switchLang}
       className="rounded-full border border-sand bg-white px-3 py-1.5 text-[11px] font-bold tracking-wide text-ink-soft transition-colors hover:border-clay hover:text-clay"
       aria-label={lang === "en" ? "বাংলায় দেখুন" : "View in English"}
     >

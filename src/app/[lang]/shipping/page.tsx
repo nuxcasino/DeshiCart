@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { isLocale, lp } from "@/lib/locale";
 import { db } from "@/db";
 import { shippingZones } from "@/db/schema";
 import { asc } from "drizzle-orm";
@@ -12,7 +13,13 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function ShippingPage() {
+export default async function ShippingPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   let zones = await db
     .select()
     .from(shippingZones)
@@ -65,8 +72,8 @@ export default async function ShippingPage() {
       </div>
       <p className="mt-6 text-sm text-ink-soft">
         Cash on Delivery is available everywhere. Questions? See the{" "}
-        <Link href="/faq" className="font-bold text-clay hover:underline">FAQ</Link> or{" "}
-        <Link href="/contact" className="font-bold text-clay hover:underline">contact us</Link>.
+        <Link href={lp(lang, "/faq")} className="font-bold text-clay hover:underline">FAQ</Link> or{" "}
+        <Link href={lp(lang, "/contact")} className="font-bold text-clay hover:underline">contact us</Link>.
       </p>
     </div>
   );

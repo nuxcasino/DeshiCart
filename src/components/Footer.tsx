@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useLang } from "@/lib/i18n";
+import { lp, type Locale } from "@/lib/locale";
 
-export default function Footer() {
+export default function Footer({ lang }: { lang: Locale }) {
   const { t } = useLang();
   return (
     <footer className="bg-ink text-cream">
@@ -32,11 +33,11 @@ export default function Footer() {
               {t("footer.shop")}
             </p>
             <ul className="mt-4 space-y-2.5 text-sm text-cream/75">
-              <li><Link href="/shop" className="hover:text-gold transition-colors">{t("footer.all")}</Link></li>
-              <li><Link href="/shop?category=t-shirts" className="hover:text-gold transition-colors">T-Shirts</Link></li>
-              <li><Link href="/shop?category=shirts" className="hover:text-gold transition-colors">Shirts</Link></li>
-              <li><Link href="/shop?category=women" className="hover:text-gold transition-colors">Women</Link></li>
-              <li><Link href="/shop?category=accessories" className="hover:text-gold transition-colors">Accessories</Link></li>
+              <li><Link href={lp(lang, "/shop")} className="hover:text-gold transition-colors">{t("footer.all")}</Link></li>
+              <li><Link href={lp(lang, "/shop?category=t-shirts")} className="hover:text-gold transition-colors">T-Shirts</Link></li>
+              <li><Link href={lp(lang, "/shop?category=shirts")} className="hover:text-gold transition-colors">Shirts</Link></li>
+              <li><Link href={lp(lang, "/shop?category=women")} className="hover:text-gold transition-colors">Women</Link></li>
+              <li><Link href={lp(lang, "/shop?category=accessories")} className="hover:text-gold transition-colors">Accessories</Link></li>
             </ul>
           </div>
           <div>
@@ -44,10 +45,10 @@ export default function Footer() {
               {t("footer.support")}
             </p>
             <ul className="mt-4 space-y-2.5 text-sm text-cream/75">
-              <li><Link href="/faq" className="hover:text-gold transition-colors">{t("footer.faq")}</Link></li>
-              <li><Link href="/shipping" className="hover:text-gold transition-colors">{t("footer.shipping")}</Link></li>
-              <li><Link href="/returns" className="hover:text-gold transition-colors">{t("footer.returns")}</Link></li>
-              <li><Link href="/contact" className="hover:text-gold transition-colors">{t("footer.contact")}</Link></li>
+              <li><Link href={lp(lang, "/faq")} className="hover:text-gold transition-colors">{t("footer.faq")}</Link></li>
+              <li><Link href={lp(lang, "/shipping")} className="hover:text-gold transition-colors">{t("footer.shipping")}</Link></li>
+              <li><Link href={lp(lang, "/returns")} className="hover:text-gold transition-colors">{t("footer.returns")}</Link></li>
+              <li><Link href={lp(lang, "/contact")} className="hover:text-gold transition-colors">{t("footer.contact")}</Link></li>
               <li>Delivery in 2–4 days nationwide</li>
               <li>Cash on delivery available</li>
               <li>7-day easy exchange</li>

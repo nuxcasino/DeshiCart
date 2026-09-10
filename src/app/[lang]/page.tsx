@@ -3,6 +3,7 @@ import Image from "next/image";
 import { getCategories, getFeaturedProducts } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo } from "@/lib/variants";
+import { isLocale, lp } from "@/lib/locale";
 import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,13 @@ const marqueeItems = [
   "bKash & Nagad accepted",
 ];
 
-export default async function HomePage() {
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang: raw } = await params;
+  const lang = isLocale(raw) ? raw : "bn";
   const [cats, featured, wishlistIds] = await Promise.all([
     getCategories(),
     getFeaturedProducts(),
@@ -59,13 +66,13 @@ export default async function HomePage() {
             </p>
             <div className="mt-9 flex flex-wrap gap-4">
               <Link
-                href="/shop"
+                href={lp(lang, "/shop")}
                 className="rounded-full bg-cream px-8 py-3.5 text-sm font-bold text-ink transition-all hover:bg-gold hover:shadow-[0_8px_30px_rgba(200,150,62,0.4)]"
               >
                 Shop the Collection
               </Link>
               <Link
-                href="/shop?sort=newest"
+                href={lp(lang, "/shop?sort=newest")}
                 className="rounded-full border border-cream/40 px-8 py-3.5 text-sm font-bold text-cream transition-all hover:border-gold hover:text-gold"
               >
                 New Arrivals →
@@ -117,7 +124,7 @@ export default async function HomePage() {
             </h2>
           </div>
           <Link
-            href="/shop"
+            href={lp(lang, "/shop")}
             className="hidden text-sm font-semibold text-ink-soft underline-offset-4 hover:text-clay hover:underline sm:block"
           >
             View all →
@@ -127,7 +134,7 @@ export default async function HomePage() {
           {cats.map((cat) => (
             <Link
               key={cat.id}
-              href={`/shop?category=${cat.slug}`}
+              href={lp(lang, `/shop?category=${cat.slug}`)}
               className="group relative overflow-hidden rounded-xl bg-sand"
             >
               <div className="relative aspect-[3/4] overflow-hidden">
@@ -167,7 +174,7 @@ export default async function HomePage() {
               </h2>
             </div>
             <Link
-              href="/shop?sort=rating"
+              href={lp(lang, "/shop?sort=rating")}
               className="hidden text-sm font-semibold text-ink-soft underline-offset-4 hover:text-clay hover:underline sm:block"
             >
               See bestsellers →
@@ -180,6 +187,7 @@ export default async function HomePage() {
                 product={p}
                 wishlisted={wishlistIds.has(p.id)}
                 variantInfo={variantInfo.get(p.id)}
+                lang={lang}
               />
             ))}
           </div>
@@ -219,7 +227,7 @@ export default async function HomePage() {
               ))}
             </ul>
             <Link
-              href="/shop"
+              href={lp(lang, "/shop")}
               className="mt-9 inline-block rounded-full bg-gold px-8 py-3.5 text-sm font-bold text-ink transition-all hover:bg-cream"
             >
               Explore Everything
