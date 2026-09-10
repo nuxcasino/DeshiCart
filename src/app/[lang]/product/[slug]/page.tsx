@@ -12,6 +12,11 @@ import { getCardVariantInfo, getProductVariants } from "@/lib/variants";
 import { isLocale, lp, pick, pickList } from "@/lib/locale";
 import { localeAlternates } from "@/lib/seo";
 import { tFor } from "@/lib/i18n";
+import {
+  JsonLd,
+  breadcrumbJsonLd,
+  productJsonLd,
+} from "@/lib/structured-data";
 import { formatBDT } from "@/lib/format";
 import Gallery from "@/components/Gallery";
 import PurchasePanel from "@/components/PurchasePanel";
@@ -84,6 +89,30 @@ export default async function ProductPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <JsonLd
+        data={productJsonLd({
+          product,
+          variants,
+          reviews,
+          categoryName: category ? pick(lang, category, "name") : null,
+          url: `/${lang}/product/${product.slug}`,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", url: `/${lang}` },
+          { name: "Shop", url: `/${lang}/shop` },
+          ...(category
+            ? [
+                {
+                  name: pick(lang, category, "name"),
+                  url: `/${lang}/shop?category=${category.slug}`,
+                },
+              ]
+            : []),
+          { name: pick(lang, product, "name"), url: `/${lang}/product/${product.slug}` },
+        ])}
+      />
       {/* Breadcrumbs */}
       <nav className="mb-6 flex items-center gap-2 text-xs text-ink-soft animate-fade-in">
         <Link href={lp(lang, "/")} className="hover:text-clay transition-colors">Home</Link>
@@ -155,7 +184,7 @@ export default async function ProductPage({
           </p>
 
           <div className="mt-7">
-            <PurchasePanel product={product} variants={variants} />
+            <PurchasePanel product={product} variants={variants} lang={lang} />
           </div>
 
           {pickList(lang, product, "details").length > 0 && (

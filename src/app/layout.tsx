@@ -7,6 +7,7 @@ import { CartProvider } from "@/lib/cart-context";
 import { LangProvider } from "@/lib/i18n";
 import { isLocale, type Locale } from "@/lib/locale";
 import { localeAlternates } from "@/lib/seo";
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/structured-data";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
@@ -60,6 +61,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={lang} className={`${fraunces.variable} ${manrope.variable}`}>
       <body className="bg-cream text-ink antialiased">
+        <JsonLd data={organizationJsonLd()} />
+        <JsonLd data={websiteJsonLd()} />
         <CartProvider>
           <LangProvider initialLang={lang}>
             <Header lang={lang} />

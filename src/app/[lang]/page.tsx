@@ -4,6 +4,7 @@ import { getCategories, getFeaturedProducts } from "@/lib/data";
 import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo } from "@/lib/variants";
 import { isLocale, lp, pick } from "@/lib/locale";
+import { JsonLd, itemListJsonLd } from "@/lib/structured-data";
 import ProductCard from "@/components/ProductCard";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,13 @@ export default async function HomePage({
 
   return (
     <div>
+      <JsonLd
+        data={itemListJsonLd(
+          "This week's most wanted",
+          `/${lang}/shop?sort=rating`,
+          featured.map((p) => ({ name: pick(lang, p, "name"), slug: p.slug }))
+        )}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden bg-ink text-cream">
         <div className="absolute inset-0">

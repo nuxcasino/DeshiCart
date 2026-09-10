@@ -5,6 +5,7 @@ import { getWishlistIds } from "@/lib/wishlist";
 import { getCardVariantInfo } from "@/lib/variants";
 import { isLocale, lp, pick } from "@/lib/locale";
 import { tFor } from "@/lib/i18n";
+import { JsonLd, itemListJsonLd } from "@/lib/structured-data";
 import ProductCard from "@/components/ProductCard";
 import FiltersBar from "@/components/FiltersBar";
 import type { Metadata } from "next";
@@ -58,6 +59,13 @@ export default async function ShopPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <JsonLd
+        data={itemListJsonLd(
+          activeCat ? pick(lang, activeCat, "name") : "Shop All",
+          `/${lang}/shop`,
+          products.slice(0, 20).map((p) => ({ name: pick(lang, p, "name"), slug: p.slug }))
+        )}
+      />
       <div className="mb-8 animate-fade-up">
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">
           {activeCat ? pick(lang, activeCat, "tagline") : tFor(lang, "shop.allCollection")}

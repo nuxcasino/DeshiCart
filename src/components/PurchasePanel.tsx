@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { Product, ProductVariant } from "@/db/schema";
@@ -9,9 +10,11 @@ import { formatBDT } from "@/lib/format";
 export default function PurchasePanel({
   product,
   variants = [],
+  lang,
 }: {
   product: Product;
   variants?: ProductVariant[];
+  lang: "bn" | "en";
 }) {
   const { addItem } = useCart();
   const hasVariants = variants.length > 0;
@@ -121,9 +124,12 @@ export default function PurchasePanel({
               <p className="text-xs font-bold uppercase tracking-wider text-ink-soft">
                 Size · <span className="text-ink">{size}</span>
               </p>
-              <span className="text-xs text-ink-soft underline underline-offset-2 cursor-pointer">
+              <Link
+                href={`/${lang}/size-guide`}
+                className="text-xs text-ink-soft underline underline-offset-2 transition-colors hover:text-clay"
+              >
                 Size guide
-              </span>
+              </Link>
             </div>
             <div className="flex flex-wrap gap-2">
               {sizesFor(color ?? "").map((s) => {

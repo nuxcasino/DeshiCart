@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { localeAlternates } from "@/lib/seo";
+import { JsonLd, faqJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   ...localeAlternates("/faq"),
@@ -21,6 +22,7 @@ const faqs: Array<[string, string]> = [
 export default function FaqPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      <JsonLd data={faqJsonLd(faqs.map(([q, a]) => ({ q, a })))} />
       <p className="text-xs font-bold uppercase tracking-[0.25em] text-clay">Help center</p>
       <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight sm:text-5xl">
         Frequently asked questions
