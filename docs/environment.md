@@ -61,6 +61,8 @@ works normally.
   `send-sms` API; customer numbers are normalized to `8801XXXXXXXXX`.
 - **Email via SMTP:** `SMTP_HOST`, `SMTP_PORT` (default 587, 465 = implicit TLS),
   `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (falls back to `SMTP_USER`).
+- **Contact inbox:** `SHOP_EMAIL` — where `/api/contact` messages go (defaults to
+  the SMTP sender).
 - Notification failures are caught and logged — they never fail an order, payment
   callback, or admin update.
 

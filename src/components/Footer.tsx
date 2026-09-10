@@ -42,6 +42,10 @@ export default function Footer() {
               Support
             </p>
             <ul className="mt-4 space-y-2.5 text-sm text-cream/75">
+              <li><Link href="/faq" className="hover:text-gold transition-colors">FAQ</Link></li>
+              <li><Link href="/shipping" className="hover:text-gold transition-colors">Shipping & Delivery</Link></li>
+              <li><Link href="/returns" className="hover:text-gold transition-colors">Returns & Exchanges</Link></li>
+              <li><Link href="/contact" className="hover:text-gold transition-colors">Contact Us</Link></li>
               <li>Delivery in 2–4 days nationwide</li>
               <li>Cash on delivery available</li>
               <li>7-day easy exchange</li>

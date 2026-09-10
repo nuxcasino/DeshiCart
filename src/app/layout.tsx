@@ -20,10 +20,31 @@ const manrope = Manrope({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.SITE_URL?.trim().replace(/\/+$/, "") ||
+  "https://deshi-cart.vercel.app";
+
 export const metadata: Metadata = {
-  title: "DeshiCart — Trendy Fashion for Bangladesh",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "DeshiCart — Trendy Fashion for Bangladesh",
+    template: "%s — DeshiCart",
+  },
   description:
     "Shop trendy t-shirts, shirts and fashion accessories crafted for young Bangladesh. Free delivery over ৳3,000.",
+  openGraph: {
+    type: "website",
+    siteName: "DeshiCart",
+    title: "DeshiCart — Trendy Fashion for Bangladesh",
+    description:
+      "Trendy tees, sharp shirts and statement accessories — premium fabric, deshi soul.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DeshiCart — Trendy Fashion for Bangladesh",
+    description:
+      "Trendy tees, sharp shirts and statement accessories — premium fabric, deshi soul.",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
